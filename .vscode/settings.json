@@ -35,8 +35,22 @@
         "substack",
         "Tauri",
         "thiserror",
+        "usecreatedb",
+        "usename",
+        "usesuper",
         "zcvf",
         "zdravje",
         "zellij"
+    ],
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "crustde",
+            "database": "postgres",
+            "username": "admin"
+        }
     ]
 }

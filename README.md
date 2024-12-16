@@ -9,6 +9,7 @@
 
 ## Description
 
+Sometimes I will abbreviate the project name `liporuwcha` to just `lip` for sake of brevity.  
 With the namespace "b" I will have a working framework that works with database, server and client.
 But without any content. It is the basis for later content.
 
@@ -18,14 +19,32 @@ Here is the code for starting and configuring the Postgres server.
 
 ### baa - database servers  
 
-For development I will have Postgres in a Linux container. I will add this container to the [Podman pod for development CRUSTDE](https://github.com/CRUSTDE-ContainerizedRustDevEnv/crustde_cnt_img_pod). I will use the prepared script in [crustde_install/pod_with_rust_pg_vscode](https://github.com/CRUSTDE-ContainerizedRustDevEnv/crustde_cnt_img_pod/tree/main/crustde_install/pod_with_rust_pg_vscode).  
-This postgres server listen to localhost port 5432. The administrator user is called "admin" and the default password for now is well known.  
-To access Postgres server from windows, I will use VSCode and connect remotely from Windows to CRUSTDE and forward the port 5432.
+I will use Postgres all the way. The database is the most important part of the project. I can be productive only if I limit myself to one specific database. There is a lot to learn about a database administration.
 
-On google cloud virtual machine my hobby server is so small, that I installed it remotely on Linux.  
+### development server inside a Linux container
+
+For development I will have Postgres in a Linux container. I will add this container to the [Podman pod for development CRUSTDE](https://github.com/CRUSTDE-ContainerizedRustDevEnv/crustde_cnt_img_pod). I will use the prepared script in [crustde_install/pod_with_rust_pg_vscode](https://github.com/CRUSTDE-ContainerizedRustDevEnv/crustde_cnt_img_pod/tree/main/crustde_install/pod_with_rust_pg_vscode).  
+This postgres server listens to localhost port 5432. The administrator user is called "admin" and the default password is well known.  
+
+Inside the container CRUSTDE I can use the client `psql` to work with the Postgres server. For that I need the bash terminal of the CRUSTDE container. I exclusively work with VSCode remote-SSH extension to connect to the container. I invoke it like this from git-bash:
+
+```bash
+MSYS_NO_PATHCONV=1 code --remote ssh-remote+crustde /home/rustdevuser/rustprojects
+```
+
+VSCode have an integrated terminal where I can work inside the CRUSTDE container easily. this is where I can use `psql`.  
+
+The same VSCode connection has also the possibility to forward the port 5432, so it is visible from the parent Debian and Windows OS.
+
+The VSCode extension `SQLTools` can be used to work with the postgres server.
+
+### production Postgres on Debian in VM
+
+On google cloud virtual machine my hobby server is so small, that I avoided using the Postgres container. Instead I installed Postgres directly on Debian.  
 Run from Windows git-bash :
 
 ```bash
+sshadd server_url
 ssh username@server_url
 sudo apt install postgresql postgresql-client
 ```
@@ -37,8 +56,9 @@ It is very effective.
 Auto-completion works ! But not for fields in a table.
 History works !
 Every sql statement must end with semicolon !
-If the result is long, use PgUp, PgDn, End, Home keys to scroll,
-then exit scroll with "\q".
+If the result is long, use PgUp, PgDn, End, Home keys to scroll, then exit scroll with "\q".
+
+There exist some administrative shortcuts, but I will avoid them and use proper SQL instead.
 
 ```psql
 \l     List database
@@ -57,22 +77,74 @@ select * from hit_counter h;
 
 ### bac - databases
 
-One server can have many databases.  
+One server can have many databases. My first development database will be `lip_01`.
 
+```sql
+CREATE DATABASE lip_01 OWNER admin;
+SELECT * FROM pg_database;
+```
 
 ### bad - backup and restore
 
-For backup run this from the VSCode terminal inside the project folder.
+For backup run this from the VSCode terminal inside the project folder when connected to CRUSTDE.
 
 ```bash
-pg_dump -F t -U admin -h localhost -p 5432 database_name > db_backup/database_name_2022_11_09.tar
+mkdir db_backup
+pg_dump -F t -U admin -h localhost -p 5432 lip_01 > db_backup/lip_01_2024_12_16.tar
+ls db_backup
 ```
 
-For restore run this from the VSCode terminal inside the project folder.
+For restore run this from the VSCode terminal inside the project folder when connected to CRUSTDE.
 
 ```bash
-createdb -U admin -h localhost -p 5432 database_name; 
-pg_restore -c -U admin -h localhost -p 5432 -d database_name db_backup/database_name_2022_11_09.tar
+createdb -U admin -h localhost -p 5432 lip_02; 
+pg_restore -c -U admin -h localhost -p 5432 -d lip_02 db_backup/lip_01_2024_12_16.tar
+```
+
+### bae - users and roles
+
+PostgreSQL uses the [concept of roles](https://neon.tech/postgresql/postgresql-administration/postgresql-roles) to represent user accounts.  
+We need one user to be the administrator. In postgres they name this concept `superuser`. By default it is called `postgres`. I will change this to `admin` because the name is more obvious.  
+Than we will make a role named `lip_user` that can work with the data, but cannot administer the database.
+An one more role `lip_ro_user` that can read the data, but cannot change it.
+
+```sql
+create or replace view bae_roles
+as
+-- select * from bae_roles ;
+SELECT usename AS role_name,
+  CASE
+     WHEN usesuper AND usecreatedb THEN
+       CAST('superuser, create database' AS pg_catalog.text)
+     WHEN usesuper THEN
+        CAST('superuser' AS pg_catalog.text)
+     WHEN usecreatedb THEN
+        CAST('create database' AS pg_catalog.text)
+     ELSE
+        CAST('' AS pg_catalog.text)
+  END role_attributes
+FROM pg_catalog.pg_user
+ORDER BY role_name desc;
+```
+
+Just FYI: PostgreSQL automatically creates a schema called `public` for every new database. Whatever object you create without specifying the schema name, PostgreSQL will place it into this `public` schema
+
+```sql
+CREATE ROLE admin SUPERUSER PASSWORD '***';
+DROP ROLE IF EXISTS postgres;
+
+CREATE ROLE lip_user LOGIN PASSWORD '***';
+GRANT ALL
+ON ALL TABLES
+IN SCHEMA "public"
+TO lip_user;
+
+CREATE ROLE lip_ro_user LOGIN PASSWORD '***';
+GRANT SELECT
+ON ALL TABLES
+IN SCHEMA "public"
+TO lip_ro_user;
+
 ```
 
 ## bj - server core (common code)
