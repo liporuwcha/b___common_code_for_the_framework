@@ -34,9 +34,13 @@ MSYS_NO_PATHCONV=1 code --remote ssh-remote+crustde /home/rustdevuser/rustprojec
 
 VSCode have an integrated terminal where I can work inside the CRUSTDE container easily. this is where I can use `psql`.  
 
-The same VSCode connection has also the possibility to forward the port 5432, so it is visible from the parent Debian and Windows OS.
+The same VSCode connection has also the possibility to forward the port 5432, so it is visible from the parent Debian and Windows OS. Or I can open [SSH secure tunneling](https://builtin.com/software-engineering-perspectives/ssh-port-forwarding) and port 5432 forwarding from Windows git-bash:
 
-The VSCode extension `SQLTools` can be used to work with the postgres server.
+```bash
+ssh rustdevuser@localhost -p 2201 -L 5432:localhost:5432
+```
+
+Then, I can use the localhost port 5432 from Windows. I can use VSCode extension `SQLTools` or `DBeaver` to send SQL statements to the Postgres server.
 
 ### production Postgres on Debian in VM
 
