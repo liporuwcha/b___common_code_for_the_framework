@@ -17,7 +17,7 @@ But without any content. It is the basis for later content.
 
 Here is the code for starting and configuring the Postgres server.
 
-### baa - database servers  
+### baa_ database servers  
 
 I will use Postgres all the way. The database is the most important part of the project. I can be productive only if I limit myself to one specific database. There is a lot to learn about a database administration.
 
@@ -37,6 +37,7 @@ VSCode have an integrated terminal where I can work inside the CRUSTDE container
 The same VSCode connection has also the possibility to forward the port 5432, so it is visible from the parent Debian and Windows OS. Or I can open [SSH secure tunneling](https://builtin.com/software-engineering-perspectives/ssh-port-forwarding) and port 5432 forwarding from Windows git-bash:
 
 ```bash
+sshadd crustde
 ssh rustdevuser@localhost -p 2201 -L 5432:localhost:5432
 ```
 
@@ -53,7 +54,7 @@ ssh username@server_url
 sudo apt install postgresql postgresql-client
 ```
 
-### bab - psql the postgres client
+### bab_ psql the postgres client
 
 [psql](https://www.postgresql.org/docs/current/app-psql.html) is the command line utility for managing postgres.  
 It is very effective.
@@ -62,7 +63,7 @@ History works !
 Every sql statement must end with semicolon !
 If the result is long, use PgUp, PgDn, End, Home keys to scroll, then exit scroll with "\q".
 
-There exist some administrative shortcuts, but I will avoid them and use proper SQL instead.
+There exist some administrative shortcuts, but I will avoid them and use proper SQL instead. I don't like upper case style of SQL, so I will force everything lower case.
 
 ```psql
 \l     List database
@@ -76,19 +77,18 @@ There exist some administrative shortcuts, but I will avoid them and use proper 
 -- every sql statement must end with semicolon !
 select * from webpage;
 select * from hit_counter h;
-
 ```
 
-### bac - databases
+### bac_ databases
 
 One server can have many databases. My first development database will be `lip_01`.
 
 ```sql
-CREATE DATABASE lip_01 OWNER admin;
-SELECT * FROM pg_database;
+create database lip_01 owner admin;
+select * from pg_database;
 ```
 
-### bad - backup and restore
+### bad_ backup and restore
 
 For backup run this from the VSCode terminal inside the project folder when connected to CRUSTDE.
 
@@ -105,7 +105,7 @@ createdb -U admin -h localhost -p 5432 lip_02;
 pg_restore -c -U admin -h localhost -p 5432 -d lip_02 db_backup/lip_01_2024_12_16.tar
 ```
 
-### bae - users and roles
+### bae_ users and roles
 
 PostgreSQL uses the [concept of roles](https://neon.tech/postgresql/postgresql-administration/postgresql-roles) to represent user accounts.  
 We need one user to be the administrator. In postgres they name this concept `superuser`. By default it is called `postgres`. I will change this to `admin` because the name is more obvious.  
@@ -116,38 +116,38 @@ An one more role `lip_ro_user` that can read the data, but cannot change it.
 create or replace view bae_roles
 as
 -- select * from bae_roles ;
-SELECT usename AS role_name,
-  CASE
-     WHEN usesuper AND usecreatedb THEN
-       CAST('superuser, create database' AS pg_catalog.text)
-     WHEN usesuper THEN
-        CAST('superuser' AS pg_catalog.text)
-     WHEN usecreatedb THEN
-        CAST('create database' AS pg_catalog.text)
-     ELSE
-        CAST('' AS pg_catalog.text)
-  END role_attributes
-FROM pg_catalog.pg_user
-ORDER BY role_name desc;
+select usename as role_name,
+  case
+     when usesuper and usecreatedb then
+       cast('superuser, create database' as pg_catalog.text)
+     when usesuper then
+        cast('superuser' as pg_catalog.text)
+     when usecreatedb then
+        cast('create database' as pg_catalog.text)
+     else
+        cast('' as pg_catalog.text)
+  end role_attributes
+from pg_catalog.pg_user
+order by role_name desc;
 ```
 
 Just FYI: PostgreSQL automatically creates a schema called `public` for every new database. Whatever object you create without specifying the schema name, PostgreSQL will place it into this `public` schema
 
 ```sql
-CREATE ROLE admin SUPERUSER PASSWORD '***';
-DROP ROLE IF EXISTS postgres;
+create role admin superuser password '***';
+drop role if exists postgres;
 
-CREATE ROLE lip_user LOGIN PASSWORD '***';
-GRANT ALL
-ON ALL TABLES
-IN SCHEMA "public"
-TO lip_user;
+create role lip_user login password '***';
+grant all
+on all tables
+in schema "public"
+to lip_user;
 
-CREATE ROLE lip_ro_user LOGIN PASSWORD '***';
-GRANT SELECT
-ON ALL TABLES
-IN SCHEMA "public"
-TO lip_ro_user;
+create role lip_ro_user login password '***';
+grant select
+on all tables
+in schema "public"
+to lip_ro_user;
 
 ```
 
