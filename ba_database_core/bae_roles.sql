@@ -1,6 +1,6 @@
-create or replace view bae_roles
+create or replace view bde_roles
 as
--- select * from bae_roles ;
+-- select * from bde_roles ;
 select usename as role_name,
   case
      when usesuper and usecreatedb then
