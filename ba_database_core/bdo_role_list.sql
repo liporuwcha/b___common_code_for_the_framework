@@ -1,6 +1,9 @@
-create or replace view bde_roles
+select bdo_view_migrate('bdo_role_list',
+$source_code$
+
+create view bdo_role_list
 as
--- select * from bde_roles ;
+-- select * from bdo_role_list ;
 select usename as role_name,
   case
      when usesuper and usecreatedb then
@@ -14,3 +17,5 @@ select usename as role_name,
   end role_attributes
 from pg_catalog.pg_user
 order by role_name desc;
+
+$source_code$);

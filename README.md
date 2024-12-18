@@ -21,7 +21,7 @@ Here is the code for starting and configuring the Postgres server.
 
 I will use Postgres all the way. The database is the most important part of the project. I can be productive only if I limit myself to one specific database. There is a lot to learn about a database administration.
 
-#### development server inside a Linux container
+#### bda_development server inside a Linux container
 
 For development I will have Postgres in a Linux container. I will add this container to the [Podman pod for development CRUSTDE](https://github.com/CRUSTDE-ContainerizedRustDevEnv/crustde_cnt_img_pod). I will use the prepared script in [crustde_install/pod_with_rust_pg_vscode](https://github.com/CRUSTDE-ContainerizedRustDevEnv/crustde_cnt_img_pod/tree/main/crustde_install/pod_with_rust_pg_vscode).  
 This postgres server listens to localhost port 5432. The administrator user is called "admin" and the default password is well known.  
@@ -43,7 +43,9 @@ ssh rustdevuser@localhost -p 2201 -L 5432:localhost:5432
 
 Then, I can use the localhost port 5432 from Windows. I can use `VSCode extension SQLTools` to send SQL statements to the Postgres server.
 
-#### production Postgres on Debian in VM
+#### bda_testing environment
+
+#### bda_production Postgres on Debian in VM
 
 On google cloud virtual machine my hobby server is so small, that I avoided using the Postgres container. Instead I installed Postgres directly on Debian.  
 Run from Windows git-bash :
@@ -90,22 +92,53 @@ I opened File-Preferences-Keyboard Shortcuts and search for "Run selected query"
 it must be in editorLangId=='sql'. It now looks like this:  
 `editorHasSelection && editorTextFocus && !config.sqltools.disableChordKeybindings && editorLangId == 'sql'`  
 Now right-click "Change key bindings" and press `F5` and then Enter. It will say it is already in use, but with different "when".  
-Now I can select a query and press `F5` like I am used to. 
+Now I can select a query and press `F5` like I am used to.
 
-### bdc_ databases
+### bdc_ postgres databases
 
-One server can have many databases. My first development database will be `lip_01`.
+One Postgres server can have many Postgres databases.
 
-```sql
-create database lip_01 owner admin;
-select * from pg_database;
+#### bdc_database_lip_init_4
+
+My first development database will be `lip_01`.
+
+- First we need to create the database:  
+[bdc_database_lip_init_1.sql](ba_database_core/bdc_database_lip_init_1.sql)
+
+- create the standard schema and users:  
+[bdc_database_lip_init_2.sql](ba_database_core/bdc_database_lip_init_2.sql)
+
+- grant permission to roles:  
+[bdc_database_lip_init_3.sql](ba_database_core/bdc_database_lip_init_3.sql)
+
+Then we need to initialize the database. In this code there will be the SQL statement to prepare a `seed lip database` that can be then upgraded and work with. This initialization uses knowledge from other parts of the project, so it will be repeated in some way.
+
+[bdc_database_lip_init_4.sql](ba_database_core/bdc_database_lip_init_4.sql)
+
+#### bdc_backup
+
+For backup run this from the VSCode terminal inside the project folder when connected to CRUSTDE.
+
+```bash
+mkdir db_backup
+pg_dump -F t -U admin -h localhost -p 5432 lip_01 > db_backup/lip_01_2024_12_16.tar
+ls db_backup
 ```
 
-### bdc_ Migration or schema update
+#### bdc_restore
+
+For restore run this from the VSCode terminal inside the project folder when connected to CRUSTDE.
+
+```bash
+createdb -U admin -h localhost -p 5432 lip_02; 
+pg_restore -c -U admin -h localhost -p 5432 -d lip_02 db_backup/lip_01_2024_12_16.tar
+```
+
+### bdc_migration
 
 The sql language or postgres don't have anything useful for database migration. Migration is the term used when we need to update the schema, add tables or columns, views or functions. This is not just an option, the migration is unavoidable when we iteratively develop a database application. Third party solutions are just terrible.
 So the first thing I did, is to create a small set of views and functions that can be called a "basic migration mechanism". It is super simplistic, made entirely inside the postgres database, but good enough for this tutorial.  
-Can you imagine that postgres does not store the original code for views and functions? It is or distorted or just partial. Unusable. So the first thing I need is a table to store the exact installed source code `bdf_source_code`. That way I can check if the "new" source code is already installed and not install unchanged code. This is not perfect because I cannot (easily) forbid to install things manually and not store it in `bdf_source_code`, but that is "bad practice" and I hope all developers understand the importance of discipline when working with a delicate system like a database.
+Can you imagine that postgres does not store the original code for views and functions? It is or distorted or just partial. Unusable. So the first thing I need is a table to store the exact installed source code `bdo_source_code`. That way I can check if the "new" source code is already installed and not install unchanged code. This is not perfect because I cannot (easily) forbid to install things manually and not store it in `bdo_source_code`, but that is "bad practice" and I hope all developers understand the importance of discipline when working with a delicate system like a database.
 After I update database objects in development, I need to be able to repeat this changes as a migration in the production database.  
 I will use backup/restore to revert the developer database to the same situation as the production database and test the migration many times. The migrate command is a bash script. It is omnipotent. I just run that script and it must do the right thing in any situation.  
 There are different objects that need different approaches.  
@@ -118,27 +151,11 @@ All modification of data must be done with sql functions. Never call update/inse
 I write my sql code in VSCode. Every object is a separate file. This makes it easy to use Git as version control. Every file is prepared for the migration mechanism and can be called from psql or within VSCode with the extensions SQLTools.  
 Then I write bash scripts that call psql to run this sql files in the correct order. That is my super-simple "migration mechanism". Good enough.
 
-### bdd_ backup and restore
+### bdo_users and bdo_role
 
-For backup run this from the VSCode terminal inside the project folder when connected to CRUSTDE.
-
-```bash
-mkdir db_backup
-pg_dump -F t -U admin -h localhost -p 5432 lip_01 > db_backup/lip_01_2024_12_16.tar
-ls db_backup
-```
-
-For restore run this from the VSCode terminal inside the project folder when connected to CRUSTDE.
-
-```bash
-createdb -U admin -h localhost -p 5432 lip_02; 
-pg_restore -c -U admin -h localhost -p 5432 -d lip_02 db_backup/lip_01_2024_12_16.tar
-```
-
-### bde_ users and roles
-
-PostgreSQL uses the [concept of roles](https://neon.tech/postgresql/postgresql-administration/postgresql-roles) to represent user accounts.  
-We need one user to be the administrator. In postgres they name this concept `superuser`. By default it is called `postgres`. I will change this to `admin` because the name is more obvious.  
+PostgreSQL uses the [concept of roles](https://neon.tech/postgresql/postgresql-administration/postgresql-roles) to represent users (with login privileges) and groups.  
+Roles are valid across the entire PostgreSQL server, so they don’t need to be recreated for each database.  
+We need one user to be the administrator. In postgres they name this concept `superuser`. By default it is called `postgres`. I will change this to `lip_admin` because the name is more obvious.  
 Than we will make a role named `lip_user` that can work with the data, but cannot administer the database.
 An one more role `lip_ro_user` that can read the data, but cannot change it.
 
@@ -147,8 +164,7 @@ An one more role `lip_ro_user` that can read the data, but cannot change it.
 Just FYI: PostgreSQL automatically creates a schema called `public` for every new database. Whatever object you create without specifying the schema name, PostgreSQL will place it into this `public` schema
 
 ```sql
-create role admin superuser password '***';
-drop role if exists postgres;
+alter role postgres to lip_admin;
 
 create role lip_user login password '***';
 grant all
@@ -164,11 +180,11 @@ to lip_ro_user;
 
 ```
 
-### bdf_ database objects
+### bdo_ database objects
 
 Here we have tables, fields, relations, views, functions,...
 
-#### bdf_source_code table(object_name, source_code)
+#### bdo_source_code table(object_name, source_code)
 
 Postgres server does not store the exact source code as I install views and functions.
 I want to be able to check if the source code has changed to know if it needs to be installed.

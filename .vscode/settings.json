@@ -21,7 +21,9 @@
         "Alla",
         "bestia",
         "bestiadev",
+        "bypassrls",
         "createdb",
+        "createrole",
         "CRUSTDE",
         "dbname",
         "endregion",
@@ -31,11 +33,14 @@
         "PATHCONV",
         "pkey",
         "plpgsql",
+        "proname",
         "Prost",
         "psql",
+        "regprocedure",
         "rustdevuser",
         "rustlang",
         "rustprojects",
+        "sqltools",
         "sshadd",
         "struct",
         "substack",
@@ -56,8 +61,8 @@
             "askForPassword": true,
             "driver": "PostgreSQL",
             "name": "crustde",
-            "database": "postgres",
-            "username": "admin"
+            "database": "lip_01",
+            "username": "lip_migration_user"
         }
     ]
 }
