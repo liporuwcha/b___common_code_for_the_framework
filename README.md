@@ -98,22 +98,23 @@ Now I can select a query and press `F5` like I am used to.
 
 One Postgres server can have many Postgres databases.
 
-#### bdc_database_lip_init_4
+#### bdc_database_lip_init
 
 My first development database will be `lip_01`.
+Database creation and initialization is split into 4 scripts.
 
-- First we need to create the database:  
+- first we need to create the database:  
 [bdc_database_lip_init_1.sql](ba_database_core/bdc_database_lip_init_1.sql)
 
-- create the standard schema and users:  
+- second create the new default schema and users:  
 [bdc_database_lip_init_2.sql](ba_database_core/bdc_database_lip_init_2.sql)
 
-- grant permission to roles:  
+- third grant permissions to roles:  
 [bdc_database_lip_init_3.sql](ba_database_core/bdc_database_lip_init_3.sql)
 
+- forth seed lip database for migration  
+[bdc_database_lip_init_4.sql](ba_database_core/bdc_database_lip_init_4.sql)  
 Then we need to initialize the database. In this code there will be the SQL statement to prepare a `seed lip database` that can be then upgraded and work with. This initialization uses knowledge from other parts of the project, so it will be repeated in some way.
-
-[bdc_database_lip_init_4.sql](ba_database_core/bdc_database_lip_init_4.sql)
 
 #### bdc_backup
 
