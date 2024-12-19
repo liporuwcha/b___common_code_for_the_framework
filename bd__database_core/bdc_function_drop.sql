@@ -1,13 +1,13 @@
-select bdo_function_migrate('bdo_function_drop',
+select bdc_function_migrate('bdc_function_drop',
 $source_code$
 
-create function bdo_function_drop(i_name name)
+create function bdc_function_drop(i_name name)
 returns text
 as
 -- drop all functions with given i_name regardless of function parameters
 -- test it, create the function test1() and then drop it: 
 -- CREATE FUNCTION test1(i integer) RETURNS integer AS $$ BEGIN RETURN i + 1; END; $$ LANGUAGE plpgsql;
--- select bdo_function_drop('test1');   
+-- select bdc_function_drop('test1');   
 $$
 declare
    v_sql text;

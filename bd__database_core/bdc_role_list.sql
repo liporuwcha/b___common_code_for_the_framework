@@ -1,9 +1,9 @@
-select bdo_view_migrate('bdo_role_list',
+select bdc_view_migrate('bdc_role_list',
 $source_code$
 
-create view bdo_role_list
+create view bdc_role_list
 as
--- select * from bdo_role_list ;
+-- select * from bdc_role_list ;
 select usename as role_name,
   case
      when usesuper and usecreatedb then

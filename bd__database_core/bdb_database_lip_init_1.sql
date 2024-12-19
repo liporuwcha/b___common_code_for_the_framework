@@ -1,4 +1,4 @@
--- bdc_database_lip_init_1.sql
+-- bdb_database_lip_init_1.sql
 -- https://stackoverflow.com/questions/29420706/best-practices-for-user-permissions-in-postgresql
 -- run under user `postgres` on database `postgres`
 

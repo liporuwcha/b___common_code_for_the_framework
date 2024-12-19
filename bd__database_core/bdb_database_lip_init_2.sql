@@ -1,4 +1,4 @@
--- bdc_database_lip_init_2.sql
+-- bdb_database_lip_init_2.sql
 -- https://stackoverflow.com/questions/29420706/best-practices-for-user-permissions-in-postgresql
 -- the administrator user `postgres` will be the owner of the database
 -- run under user `postgres` on database `lip_01`

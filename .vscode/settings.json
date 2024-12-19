@@ -22,6 +22,8 @@
         "bestia",
         "bestiadev",
         "bypassrls",
+        "conname",
+        "contype",
         "createdb",
         "createrole",
         "CRUSTDE",
@@ -49,6 +51,7 @@
         "usecreatedb",
         "usename",
         "usesuper",
+        "varchar",
         "zcvf",
         "zdravje",
         "zellij"
