@@ -1,6 +1,6 @@
 # b___common_code_for_the_framework
 
-***liporuwcha namespace "b - common code for the framework"***
+***liporuwcha namespace "b___ common code for the framework"***
 
  ![work-in-progress](https://img.shields.io/badge/work_in_progress-yellow)
  ![rustlang](https://img.shields.io/badge/rustlang-orange)
@@ -13,7 +13,7 @@ Sometimes I will abbreviate the project name `liporuwcha` to just `lip` for sake
 With the namespace "b" I will have a working framework that works with database, server and client.
 But without any content. It is the basis for later content.
 
-## bd__ - database core (common code)
+## bd__ database core (common code)
 
 Here is the code for starting and configuring the Postgres server.
 
