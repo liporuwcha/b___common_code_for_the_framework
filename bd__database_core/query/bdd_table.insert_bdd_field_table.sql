@@ -18,3 +18,9 @@ VALUES
 ( 8, 3, 'data_type','varchar(100)'),
 ( 9, 3, 'not_null','varchar(10)')
 ;
+
+default_constraint
+
+check_constraint
+
+select * from bdd_field_table

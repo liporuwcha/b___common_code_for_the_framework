@@ -3,7 +3,7 @@
 -- This sql script contains code for the initialization of the postgres lip database with a minimal migration mechanism for the "lip" framework.
 -- Run only ONCE after creating the new database.
 -- After that we can use the installed migration mechanism to migrate/update the database forward as we develop and deploy.
--- All objects will be created in the schema `lip_schema`
+-- All objects will be created in the schema `lip`
 -- run under user `lip_migration_user` on database `lip_01`
 
 create table bdc_source_code
@@ -13,26 +13,24 @@ create table bdc_source_code
     constraint bdc_source_code_pkey primary key (object_name)
 );
 
-create view bdc_function_list
+create or replace view bdc_function_list
 as
--- only lip_schema functions
+-- only lip functions
 -- select * from bdc_function_list ;
-
 select t.routine_name::name, 
 t.specific_name::name, 
 t.type_udt_name::name
 from information_schema.routines t
-where t.routine_schema='lip_schema' and t.routine_type='FUNCTION'
+where t.routine_schema='lip' and t.routine_type='FUNCTION'
 order by t.routine_name;
 
 create view bdc_view_list
 as
--- only lip_schema views
+-- only lip views
 -- select * from bdc_view_list ;
-
 select t.table_name::name as view_name
 from information_schema.views t
-where t.table_schema='lip_schema'
+where t.table_schema='lip'
 order by t.table_name;
 
 create function bdc_function_drop(i_name name)
@@ -42,7 +40,7 @@ as
 -- test it, create the function test1() and then drop it: 
 -- CREATE FUNCTION test1(i integer) RETURNS integer AS $$ BEGIN RETURN i + 1; END; $$ LANGUAGE plpgsql;
 -- select bdc_function_drop('test1');   
-$$
+$fn$
 declare
    v_sql text;
    v_functions_dropped int;
@@ -60,7 +58,7 @@ begin
    end if;
    return '';
 end;
-$$ language plpgsql;
+$fn$ language plpgsql;
 
 
 create function bdc_function_migrate(i_object_name name, i_source_code text)
@@ -70,7 +68,7 @@ as
 -- if is equal, nothing happens
 -- else drop the old and install the new function
 -- finally insert/update into bdc_source_code only if the installation is successful  
-$$
+$fn$
 declare
    v_old_source_code text;
    v_void text;
@@ -109,7 +107,7 @@ begin
    end if;
 return format('Up to date Function: %I', i_object_name);
 end;
-$$ language plpgsql;
+$fn$ language plpgsql;
 
 
 create function bdc_view_migrate(i_object_name name, i_source_code text)
@@ -119,7 +117,7 @@ AS
 -- if is equal, nothing happens
 -- else drop the old and install the new view
 -- finally insert/update into bdc_source_code  
-$$
+$fn$
 declare
    v_old_source_code text;
    v_void text;
@@ -158,4 +156,4 @@ begin
    end if;
    return format('Up to date View: %I', i_object_name);
 end;
-$$ language plpgsql;
+$fn$ language plpgsql;

@@ -27,6 +27,7 @@
         "createdb",
         "createrole",
         "CRUSTDE",
+        "dbclient",
         "dbname",
         "endregion",
         "liporuwcha",
@@ -52,6 +53,7 @@
         "usename",
         "usesuper",
         "varchar",
+        "Weijan",
         "zcvf",
         "zdravje",
         "zellij"

@@ -4,13 +4,13 @@
 -- run under user `postgres` on database `lip_01`
 
 revoke create on schema public from public;
-create schema if not exists lip_schema;
-alter database lip_01 set search_path to lip_schema;
+create schema if not exists lip;
+alter database lip_01 set search_path to lip;
 create user lip_migration_user with encrypted password '***';
 create user lip_app_user with encrypted password '***';
-grant usage, create on schema lip_schema to lip_migration_role;
-grant usage on schema lip_schema to lip_app_role;
-grant all on all sequences in schema lip_schema to lip_migration_role;
-grant usage, select on all sequences in schema lip_schema to lip_app_role;
+grant usage, create on schema lip to lip_migration_role;
+grant usage on schema lip to lip_app_role;
+grant all on all sequences in schema lip to lip_migration_role;
+grant usage, select on all sequences in schema lip to lip_app_role;
 grant lip_migration_role to lip_migration_user;
 grant lip_app_role to lip_app_user;

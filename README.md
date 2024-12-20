@@ -34,7 +34,7 @@ MSYS_NO_PATHCONV=1 code --remote ssh-remote+crustde /home/rustdevuser/rustprojec
 
 VSCode have an integrated terminal where I can work inside the CRUSTDE container easily. this is where I can use `psql`.  
 
-To forward the port 5432 to make it accessible from the parent Debian and Windows OS, I can open [SSH secure tunneling](https://builtin.com/software-engineering-perspectives/ssh-port-forwarding) from Windows git-bash:
+To forward the port 5432 to make it accessible from the parent Debian and Windows OS, I can open [secure SSH tunneling](https://builtin.com/software-engineering-perspectives/ssh-port-forwarding) from Windows git-bash:
 
 ```bash
 sshadd crustde
@@ -80,16 +80,19 @@ select * from webpage;
 select * from hit_counter h;
 ```
 
-#### bda_SQLTools extension for VSCode
+#### bda_VSCodeDatabaseClient
 
-I like the VSCode extension SQLTools to work with Postgres. It creates a connection over tcp to the Postgres server. If needed I use SSH tunneling when I use containers.  
-In VSCode SqlTools the shortcut to "Run Selected Query" is Ctrl+EE (yes two times E). This is not great.  
-I want to have `F5` as I am used to it. But it is now used for debugging. In VSCode shortcuts it is possible to define when a shortcut is used for what.  
-I opened File-Preferences-Keyboard Shortcuts and search for "Run selected query". Right click and choose "Change when expression". Here I added that
-it must be in editorLangId=='sql'. It now looks like this:  
-`editorHasSelection && editorTextFocus && !config.sqltools.disableChordKeybindings && editorLangId == 'sql'`  
-Now right-click "Change key bindings" and press `F5` and then Enter. It will say it is already in use, but with different "when".  
-Now I can select the text of a query and press `F5` like I am used to.
+I need to easily change data in a grid. I found this VSCode extension [DatabaseClient from Weijan Chen](https://marketplace.visualstudio.com/items?itemName=cweijan.vscode-database-client2) that does it well. I will remove the extension SQLTools.
+
+The extension creates a connection over tcp to the Postgres server. If needed, I use SSH tunneling when I use containers.
+
+Because of the problem of parsing Postgres $$ string delimiters I avoid parsing in the VSCode Database Client extension.  
+For all my needs in Postgres, I use now the command `mysql.runSQLWithoutParse` instead of the default `mysql.runSQL`. I can select all or select a part of my sql code, and press `ctrl+enter`.  
+In VSCode-Preferences-Keyboard shortcut from the `command`: `mysql.runSQL` remove the keybinding `key`: `ctrl+enter`.  
+Then on `command`: `mysql.runSQLWithoutParse` add the same keybinding `key`: `ctrl+enter`,  
+and the When expression copied from the original shortcut:   `when`: `config.database-client.executeCursorSQLByShortcut && editorLangId =~ /sql|cql|postgres/ || config.database-client.executeCursorSQLByShortcut && resourceFilename =~ /.dbclient-js$/ || editorHasSelection && editorLangId =~ /sql|cql|postgres/ || editorHasSelection && resourceFilename =~ /.dbclient-js$/`.
+
+I often want to close the sql Result pane. Usually the Result pane is in Editor Group 2. I press ctrl+2 and ctrl+w to close it.    
 
 ### bdb_ postgres databases
 
@@ -97,7 +100,7 @@ One Postgres server can have many Postgres databases.
 
 ### bdb_schema
 
-Postgres automatically creates the schema `public` for new database. I will create a new specific schema `lip_schema` instead as the default schema.
+Postgres automatically creates the schema `public` for new database. I will create a new specific schema `lip` instead as the default schema.
 
 ### bdb_users and bdb_role
 

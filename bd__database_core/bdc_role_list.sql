@@ -1,7 +1,7 @@
 select bdc_view_migrate('bdc_role_list',
 $source_code$
 
-create view bdc_role_list
+create or replace view bdc_role_list
 as
 -- select * from bdc_role_list ;
 select usename as role_name,

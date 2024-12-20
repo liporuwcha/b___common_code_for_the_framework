@@ -1,16 +1,16 @@
 select bdc_view_migrate('bdc_table_list',
 $source_code$
 
-create view bdc_table_list
+create or replace view bdc_table_list
 as
--- only lip_schema tables
+-- only lip tables
 -- select * from bdc_table_list ;
 
-SELECT
+select
   t.table_name
-FROM
+from
   information_schema.tables t
-where t.table_schema='lip_schema'
+where t.table_schema='lip'
 and table_type='BASE TABLE'
 
 $source_code$);

@@ -1,14 +1,13 @@
-select bdc_function_migrate('bdc_function_migrate',
+select bdc_function_migrate('bdc_function_migrate', 
 $source_code$
 
-create function bdc_function_migrate(i_object_name name, i_source_code text)
+create or replace function bdc_function_migrate(i_object_name name, i_source_code text)
 returns text 
-as
+as $function$
 -- checks if the function is already installed and if the content of bdc_source_code is different
 -- if is equal, nothing happens
 -- else drop the old and install the new function
 -- finally insert/update into bdc_source_code only if the installation is successful  
-$$
 declare
    v_old_source_code text;
    v_void text;
@@ -37,16 +36,18 @@ begin
          
          execute i_source_code;
 
-         update bdc_source_code
+         update bdc_source_code s
          set source_code = i_source_code
-         where object_name = i_object_name;
+         where s.object_name = i_object_name;
 
          return format('Updated function: %I', i_object_name);
+      else
+         return format('Function is up to date: %I', i_object_name);
       end if;
 
    end if;
-return format('Up to date Function: %I', i_object_name);
+
 end;
-$$ language plpgsql;
+$function$ language plpgsql;
 
 $source_code$);
