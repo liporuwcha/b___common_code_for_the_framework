@@ -131,6 +131,8 @@ Then I write bash scripts that call psql to run this sql files in the correct or
 
 Postgres sometimes adds type notation to my code for default and check constraint on a table field. That makes it hard to compare my definition with what is installed in the database. It does not ass it for varchar, integer, but for text and name,... It adds also some round brackets. For now I must type in my definition exactly how postgres stores it. Examples: `check ((length((table_name)::text) > 2))`  or  `default ''::name`
 
+After some initial coding with sql files in VSCode, the definitions and code of all objects will stay inside the database. Then sql functions will provide installation and migration utilities. This is good for maintainability and open-source.
+
 #### bdb_database_lip_init
 
 My first development database will be `lip_01`.
