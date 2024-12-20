@@ -92,7 +92,9 @@ In VSCode-Preferences-Keyboard shortcut from the `command`: `mysql.runSQL` remov
 Then on `command`: `mysql.runSQLWithoutParse` add the same keybinding `key`: `ctrl+enter`,  
 and the When expression copied from the original shortcut:   `when`: `config.database-client.executeCursorSQLByShortcut && editorLangId =~ /sql|cql|postgres/ || config.database-client.executeCursorSQLByShortcut && resourceFilename =~ /.dbclient-js$/ || editorHasSelection && editorLangId =~ /sql|cql|postgres/ || editorHasSelection && resourceFilename =~ /.dbclient-js$/`.
 
-I often want to close the sql Result pane. Usually the Result pane is in Editor Group 2. I press ctrl+2 and ctrl+w to close it.    
+I often want to close the sql `Result pane`. Usually the Result pane is in `Editor Group 2`. I press `ctrl+2` and `ctrl+w` to close it.  
+
+To open and close the terminal in VSCode I use my keybinding `ctrl+č` to `workbench.action.terminal.toggleTerminal`.
 
 ### bdb_ postgres databases
 
@@ -126,6 +128,8 @@ One table can have foreign keys to another table. The later must be installed fi
 All modification of data must be done with sql functions. Never call update/insert/delete directly from outside of the database. Slowly but surely, a different module in another language on another server will need the same functionality and the only way to have it in common is to have it on the database level.
 I write my sql code in VSCode. Every object is a separate file. This makes it easy to use Git as version control. Every file is prepared for the migration mechanism and can be called from psql or within VSCode with the extensions SQLTools.  
 Then I write bash scripts that call psql to run this sql files in the correct order. That is my super-simple "migration mechanism". Good enough.
+
+Postgres sometimes adds type notation to my code for default and check constraint on a table field. That makes it hard to compare my definition with what is installed in the database. It does not ass it for varchar, integer, but for text and name,... It adds also some round brackets. For now I must type in my definition exactly how postgres stores it. Examples: `check ((length((table_name)::text) > 2))`  or  `default ''::name`
 
 #### bdb_database_lip_init
 

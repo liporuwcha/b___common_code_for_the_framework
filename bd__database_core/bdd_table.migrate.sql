@@ -1,12 +1,12 @@
 select bdc_function_migrate('bdd_table.migrate',
 $source_code$
 
-create function "bdd_table.migrate"(i_table_name name)
+create or replace function "bdd_table.migrate"(i_table_name name)
 returns text 
 as $function$
 -- checks if the table has all the fields
 -- if needed it adds the fields 
--- select * from "bdd_table.migrate"('bdd_unit')
+-- select * from "bdd_table.migrate"('test1')
 declare
     v_row record;
     v_sql text;
@@ -50,7 +50,7 @@ begin
             select f.field_name, f.data_type, f.not_null, f.default_constraint, f.check_constraint
             from bdd_field_table f
             where f.jid_bdd_table = v_id_bdd_table
-            and not exists(select * from bdc_field_table c where c.table_name=i_table_name and c.column_name=f.field_name)
+            and not exists(select * from bdc_field_table_list c where c.table_name=i_table_name and c.column_name=f.field_name)
             
         LOOP
             if v_sql_fields != '' then
@@ -61,9 +61,10 @@ begin
         END LOOP;
 
         v_sql = format(E'alter table %s \n%s\n;', i_table_name, v_sql_fields);
-        --execute v_sql;
+        execute v_sql;
         return format(E'executed sql code:\n%s', v_sql);
     end if;
+
 end;
 $function$ language plpgsql;
 
