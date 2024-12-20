@@ -159,8 +159,10 @@ For backup run this from the VSCode terminal inside the project folder when conn
 
 ```bash
 mkdir db_backup
-pg_dump -F t -U admin -h localhost -p 5432 lip_01 > db_backup/lip_01_2024_12_16.tar
+pg_dump -F t -U postgres -h localhost -p 5432 lip_01 > db_backup/lip_01_2024_12_20.tar
 ls db_backup
+# download backup over ssh for development and testing
+scp rustdevuser@crustde:/home/rustdevuser/db_backup/lip_01_2024_12_20.tar db_backup/lip_01_2024_12_20.tar
 ```
 
 #### bdb_restore
@@ -169,7 +171,7 @@ For restore run this from the VSCode terminal inside the project folder when con
 
 ```bash
 createdb -U admin -h localhost -p 5432 lip_02; 
-pg_restore -c -U admin -h localhost -p 5432 -d lip_02 db_backup/lip_01_2024_12_16.tar
+pg_restore -c -U admin -h localhost -p 5432 -d lip_02 db_backup/lip_01_2024_12_20.tar
 ```
 
 ### bdc_ database lowest components
