@@ -1,4 +1,4 @@
-select bdc_function_migrate('bdd_table.migrate',
+select "bdd_function.upsert_and_migrate"('bdd_table.migrate',
 $source_code$
 
 create or replace function "bdd_table.migrate"(i_table_name name)
@@ -65,7 +65,6 @@ begin
         return format(E'executed sql code:\n%s', v_sql);
     end if;
 
-end;
-$function$ language plpgsql;
+end; $function$ language plpgsql;
 
 $source_code$);

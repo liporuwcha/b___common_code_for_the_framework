@@ -157,14 +157,19 @@ Then we need to initialize the database. In this code there will be the SQL stat
 
 #### bdb_backup
 
-For backup run this from the VSCode terminal inside the project folder when connected to CRUSTDE.
+For backup run this in bash terminal inside the container.
 
 ```bash
 mkdir db_backup
-pg_dump -F t -U postgres -h localhost -p 5432 lip_01 > db_backup/lip_01_2024_12_20.tar
+pg_dump -F t -U postgres -h localhost -p 5432 lip_01 > db_backup/lip_01_2024_12_21.tar
 ls db_backup
+```
+
+Run in the parent OS to download from the container over ssh:
+
+```bash
 # download backup over ssh for development and testing
-scp rustdevuser@crustde:/home/rustdevuser/db_backup/lip_01_2024_12_20.tar db_backup/lip_01_2024_12_20.tar
+scp rustdevuser@crustde:/home/rustdevuser/db_backup/lip_01_2024_12_21.tar db_backup/lip_01_2024_12_21.tar
 ```
 
 #### bdb_restore
@@ -173,7 +178,7 @@ For restore run this from the VSCode terminal inside the project folder when con
 
 ```bash
 createdb -U admin -h localhost -p 5432 lip_02; 
-pg_restore -c -U admin -h localhost -p 5432 -d lip_02 db_backup/lip_01_2024_12_20.tar
+pg_restore -c -U admin -h localhost -p 5432 -d lip_02 db_backup/lip_01_2024_12_21.tar
 ```
 
 ### bdc_ database lowest components

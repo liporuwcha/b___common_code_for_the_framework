@@ -1,4 +1,4 @@
-select bdc_function_migrate('bdc_strip_prefix',
+select "bdd_function.upsert_and_migrate"('bdc_strip_prefix',
 $source_code$
 
 create or replace function "bdc_strip_prefix"(i_string text, i_prefix text)
@@ -14,6 +14,7 @@ as $function$
 -- select bdc_strip_prefix('123456789',null) - returns the same string
 -- select bdc_strip_prefix(null,'123') - returns null
 begin
+
 if starts_with(i_string, i_prefix) then
     return substring(i_string, length(i_prefix)+1);
 else

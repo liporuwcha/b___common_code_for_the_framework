@@ -38,9 +38,9 @@ returns text
 as
 -- drop all functions with given i_name regardless of function parameters
 -- test it, create the function test1() and then drop it: 
--- CREATE FUNCTION test1(i integer) RETURNS integer AS $$ BEGIN RETURN i + 1; END; $$ LANGUAGE plpgsql;
+-- CREATE FUNCTION test1(i integer) RETURNS integer AS $x$ BEGIN RETURN i + 1; END; $x$ LANGUAGE plpgsql;
 -- select bdc_function_drop('test1');   
-$fn$
+$function$
 declare
    v_sql text;
    v_functions_dropped int;
@@ -58,7 +58,7 @@ begin
    end if;
    return '';
 end;
-$fn$ language plpgsql;
+$function$ language plpgsql;
 
 
 create function bdc_function_migrate(i_object_name name, i_source_code text)
@@ -68,7 +68,7 @@ as
 -- if is equal, nothing happens
 -- else drop the old and install the new function
 -- finally insert/update into bdc_source_code only if the installation is successful  
-$fn$
+$function$
 declare
    v_old_source_code text;
    v_void text;
@@ -107,7 +107,7 @@ begin
    end if;
 return format('Up to date Function: %I', i_object_name);
 end;
-$fn$ language plpgsql;
+$function$ language plpgsql;
 
 
 create function bdc_view_migrate(i_object_name name, i_source_code text)
@@ -117,7 +117,7 @@ AS
 -- if is equal, nothing happens
 -- else drop the old and install the new view
 -- finally insert/update into bdc_source_code  
-$fn$
+$function$
 declare
    v_old_source_code text;
    v_void text;
@@ -156,4 +156,4 @@ begin
    end if;
    return format('Up to date View: %I', i_object_name);
 end;
-$fn$ language plpgsql;
+$function$ language plpgsql;

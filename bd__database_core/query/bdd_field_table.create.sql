@@ -24,7 +24,7 @@ join bdd_table t on t.id_bdd_table=f.jid_bdd_table
 ;
 
 update bdd_field_table
-set check_constraint=$$check (length(value) > 0)$$
+set check_constraint=$x$check (length(value) > 0)$x$
 where field_name in (
 'data_type'
 )

@@ -1,4 +1,4 @@
-select bdc_function_migrate('bdc_view_migrate',
+select "bdd_function.upsert_and_migrate"('bdc_view_migrate',
 $source_code$
 
 create or replace function bdc_view_migrate(i_object_name name, i_source_code text)
@@ -50,7 +50,7 @@ begin
          return format('Updated view: %I', i_object_name);
       end if;
    end if;
-end;
-$function$ language plpgsql;
+
+end; $function$ language plpgsql;
 
 $source_code$);
