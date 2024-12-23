@@ -1,6 +1,3 @@
-select "bdd_function.upsert_and_migrate"('bdd_function.upsert',
-$source_code$
-
 create or replace function "bdd_function.upsert"(i_function_name name, i_source_code text)
 returns text
 as $function$
@@ -33,5 +30,3 @@ begin
         return format('Function updated %s',i_function_name);
     end if;
 end; $function$ language plpgsql;
-
-$source_code$);

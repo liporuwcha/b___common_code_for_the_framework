@@ -1,0 +1,6 @@
+2	dm_system_name	names of objects in the lip framework	CREATE DOMAIN dm_system_name AS varchar(100) not null check (length(value) > 0);
+3	dm_description	notes or descriptions	CREATE DOMAIN dm_description AS text not null default '';
+1	dm_positive_integer	positive integers	CREATE DOMAIN dm_positive_integer AS integer CHECK (VALUE > 0);
+\.
+
+

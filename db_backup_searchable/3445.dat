@@ -1,0 +1,22 @@
+14	5	domain_name	name	not null		check (length((domain_name)::text) > 2)
+5	3	id_bdd_field_table	integer	not null		
+6	3	jid_bdd_table	integer	not null		
+3	2	id_bdd_table	integer	not null		
+1	1	object_name	name	not null		check (length((object_name)::text) > 0)
+7	3	field_name	name	not null		check (length((field_name)::text) > 0)
+8	3	data_type	varchar(100)	not null		check (length((data_type)::text) > 0)
+10	4	id_bdd_unit	integer	not null		
+4	2	table_name	name	not null	default ''::name	check (length((table_name)::text) > 2)
+9	3	not_null	varchar(10)	not null	default ''	
+12	4	description	text	not null	default ''	
+17	6	id_bdd_function	integer	not null		
+19	6	source_code	text	not null	default ''::text	
+18	6	function_name	name	not null	default ''::name	check (length((function_name)::text) > 2)
+16	5	source_code	text	not null		
+2	1	source_code	text	not null		
+15	5	description	text	not null	default ''	
+13	5	id_bdd_domain	integer	not null		check (id_bdd_domain > 0)
+11	4	unit_name	name	not null		check (length(unit_name) > 0)
+\.
+
+

@@ -15,3 +15,6 @@ VALUES
 ( 1, 1, 'object_name', 'name' ),
 ( 2, 1, 'source_code', 'text' )
 ;
+
+alter table bdd_table
+alter column notes set default ''

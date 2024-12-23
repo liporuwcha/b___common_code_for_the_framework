@@ -6,28 +6,27 @@ as
 -- more details for field definitions are used to compare with the postgres definition
 -- select * from "bdd_field_table.details" ;
 
-
 select t.table_name, f.field_name, 
-
+-- data_type
 f.data_type,
 f.data_type as data_type_formatted,
 case when c.data_type='character varying' then format('varchar(%s)', c.character_maximum_length)
 else c.data_type
 end as bdc_data_type_formatted,
-
+-- not null
 f.not_null,
 f.not_null as not_null_formatted, 
 case when c.is_nullable='YES' then ''
 else 'not null'
 end as bdc_is_nullable_formatted,
-
+-- default constraint
 f.default_constraint,
 case 
     when f.default_constraint='' then ''
     else format('%s',bdc_strip_prefix(f.default_constraint,'default '))
 end as default_constraint_formatted,
 replace(replace(coalesce(c.column_default,''), '::character varying', ''),'::text','') as bdc_column_default_formatted,
-
+-- check constraint
 f.check_constraint,
 case 
     when f.check_constraint='' then ''

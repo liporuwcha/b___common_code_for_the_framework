@@ -1,6 +1,3 @@
-select "bdd_function.upsert_and_migrate"('bdc_function_migrate', 
-$source_code$
-
 create or replace function bdc_function_migrate(i_function_name name, i_source_code text)
 returns text 
 as $function$
@@ -11,6 +8,7 @@ as $function$
 declare
    v_old_source_code text;
    v_void text;
+
 begin
 
    if not exists(select * from bdc_source_code a where a.object_name = i_function_name) then
@@ -52,5 +50,3 @@ begin
    end if;
 
 end; $function$ language plpgsql;
-
-$source_code$);

@@ -1,6 +1,3 @@
-select "bdd_function.upsert_and_migrate"('bdc_strip_prefix',
-$source_code$
-
 create or replace function "bdc_strip_prefix"(i_string text, i_prefix text)
 returns text 
 as $function$
@@ -22,5 +19,3 @@ else
 end if;
 
 end; $function$ language plpgsql;
-
-$source_code$);

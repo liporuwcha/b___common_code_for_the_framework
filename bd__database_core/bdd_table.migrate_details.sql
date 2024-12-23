@@ -1,6 +1,3 @@
-select "bdd_function.upsert_and_migrate"('bdd_table.migrate_details',
-$source_code$
-
 create or replace function "bdd_table.migrate_details"(i_table_name name)
 returns text 
 as $function$
@@ -88,5 +85,3 @@ begin
     return format(E'executed sql code:\n%s', v_sql);
 
 end; $function$ language plpgsql;
-
-$source_code$);

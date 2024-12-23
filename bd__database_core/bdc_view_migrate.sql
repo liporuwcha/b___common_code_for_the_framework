@@ -1,6 +1,3 @@
-select "bdd_function.upsert_and_migrate"('bdc_view_migrate',
-$source_code$
-
 create or replace function bdc_view_migrate(i_object_name name, i_source_code text)
 returns text 
 as $function$
@@ -52,5 +49,3 @@ begin
    end if;
 
 end; $function$ language plpgsql;
-
-$source_code$);

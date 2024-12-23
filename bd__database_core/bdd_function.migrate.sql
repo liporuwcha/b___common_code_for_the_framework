@@ -1,6 +1,3 @@
-select "bdd_function.upsert_and_migrate"('bdd_function.migrate',
-$source_code$
-
 create or replace function "bdd_function.migrate"(i_function_name name)
 returns text 
 as $function$
@@ -18,5 +15,3 @@ select bdc_function_migrate from bdc_function_migrate(i_function_name, v_source_
 
 return v_text;
 end; $function$ language plpgsql;
-
-$source_code$);

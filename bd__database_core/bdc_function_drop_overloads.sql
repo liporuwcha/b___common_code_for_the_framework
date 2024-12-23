@@ -1,6 +1,3 @@
-select "bdd_function.upsert_and_migrate"('bdd_function.upsert_and_migrate',
-$source_code$
-
 create or replace function bdc_function_drop_overloads(i_function_name name)
 returns text
 as $function$
@@ -41,5 +38,3 @@ begin
     return '';
 
 end; $function$ language plpgsql;
-
-$source_code$);
