@@ -15,9 +15,9 @@ begin
     end if;
 
     select p.id_bdd_function
-    into v_id_bdd_function
     from   bdd_function p
-    where  p.function_name = i_function_name;
+    where  p.function_name = i_function_name
+    into v_id_bdd_function;
 
     if v_id_bdd_function is null THEN
 

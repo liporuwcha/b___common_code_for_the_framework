@@ -16,7 +16,7 @@ declare
 begin
     -- set the variable for id_bdd_table
     -- the expression will set the variables to NULL if no rows were returned
-    select t.id_bdd_table into v_id_bdd_table from bdd_table t where t.table_name = i_table_name;
+    select t.id_bdd_table from bdd_table t where t.table_name = i_table_name into v_id_bdd_table;
     if v_id_bdd_table is null then
         -- early return
         return format('Error: Definition for %s is not in bdd_table.', i_table_name);

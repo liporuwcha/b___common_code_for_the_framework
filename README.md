@@ -172,6 +172,8 @@ Run in the parent OS to download from the container over ssh:
 scp rustdevuser@crustde:/home/rustdevuser/db_backup/lip_01_2024_12_21.tar db_backup/lip_01_2024_12_21.tar
 ```
 
+The dump file is just gz compressed plain text. It is easily searchable with a standard text editor. Nice for my search-all-and replace approach!
+
 #### bdb_restore
 
 For restore run this from the VSCode terminal inside the project folder when connected to CRUSTDE.

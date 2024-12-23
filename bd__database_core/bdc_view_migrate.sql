@@ -28,9 +28,9 @@ begin
       return format('Inserted view: %I', i_object_name);
    else
       select a.source_code 
-      into v_old_source_code
       from bdc_source_code a
-      where a.object_name = i_object_name;
+      where a.object_name = i_object_name
+      into v_old_source_code;
 
       if i_source_code <> v_old_source_code then
          if exists(select * from bdc_view_list v where v.view_name=i_object_name) then

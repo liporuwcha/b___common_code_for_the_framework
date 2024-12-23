@@ -1,4 +1,12 @@
 
+-- random for id
+do $anonymous_PLpgSQL_block$
+declare v_r integer;
+begin
+  select bdc_random_int() into v_r;
+  raise notice 'my random: %', v_r;
+end;$anonymous_PLpgSQL_block$;
+
 INSERT INTO bdd_table (id_bdd_table, table_name)
 VALUES (
     4,

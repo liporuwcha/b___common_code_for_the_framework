@@ -30,9 +30,9 @@ begin
       return format('Inserted function: %I', i_function_name);
    else
       select a.source_code 
-      into v_old_source_code
       from bdc_source_code a
-      where a.object_name = i_function_name;
+      where a.object_name = i_function_name
+      into v_old_source_code;
 
       if i_source_code <> v_old_source_code then
          
