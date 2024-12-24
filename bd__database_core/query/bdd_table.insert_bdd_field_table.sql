@@ -5,12 +5,7 @@ VALUES (
     'bdd_field_table'
   );
 
-INSERT INTO bdd_field_table (
-    id_bdd_field_table,
-    jid_bdd_table,
-    field_name,
-    data_type
-  )
+INSERT INTO bdd_field_table ( id_bdd_field_table, jid_bdd_table, field_name, data_type )
 VALUES 
 ( 5, 3, 'id_bdd_field_table', 'integer' ),
 ( 6, 3, 'jid_bdd_table','integer'),
@@ -19,8 +14,17 @@ VALUES
 ( 9, 3, 'not_null','varchar(10)')
 ;
 
-default_constraint
+INSERT INTO bdd_field_table ( id_bdd_field_table, jid_bdd_table, field_name, data_type, default_constraint, check_constraint )
+VALUES ( bdc_random_int(), 3, 'is_primary_key', 'boolean','default false','' );
 
-check_constraint
 
-select * from bdd_field_table
+
+select "bdd_table.migrate"('bdd_field_table');
+select "bdd_table.migrate_details"('bdd_field_table');
+
+select * 
+from bdd_field_table
+-- update bdd_field_table set is_primary_key=true
+where field_name like 'obj%'
+
+

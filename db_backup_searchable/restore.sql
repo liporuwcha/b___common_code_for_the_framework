@@ -318,7 +318,7 @@ begin
 
    if not exists(select * from bdc_source_code a where a.object_name = i_object_name) then
       if exists(select * from bdc_view_list v where v.view_name=i_object_name) then
-         v_sql = format('drop view %i cascade', i_object_name);
+         v_sql = format('drop view %I cascade', i_object_name);
          RAISE '%s', v_sql;
          execute v_sql;
       end if;

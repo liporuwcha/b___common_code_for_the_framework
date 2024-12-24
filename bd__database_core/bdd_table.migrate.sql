@@ -10,6 +10,7 @@ declare
     v_sql_fields text;
     v_void text;
     v_id_bdd_table integer;
+    v_pk_field_name name;
 begin
     -- set the variable for id_bdd_table
     -- the expression will set the variables to NULL if no rows were returned
@@ -19,7 +20,7 @@ begin
         return format('Error: Definition for %s is not in bdd_table.', i_table_name);
     end if;
 
-    RAISE NOTICE 'Found definition for %s in bdd_table', i_table_name;
+    RAISE NOTICE 'Found definition for % in bdd_table', i_table_name;
 
     if not exists(select * from bdc_table_list a where a.table_name=i_table_name) then
         -- if table not exists, create it with all fields in one go.
@@ -38,8 +39,6 @@ begin
 
         v_sql = format(E'create table %s (\n%s\n)', i_table_name, v_sql_fields);
         execute v_sql;
-
-        return format(E'executed sql code:\n%s', v_sql);
     else
         -- table exists, what fields don't exist?
         -- prepare code for missing fields
@@ -59,7 +58,19 @@ begin
 
         v_sql = format(E'alter table %s \n%s\n;', i_table_name, v_sql_fields);
         execute v_sql;
-        return format(E'executed sql code:\n%s', v_sql);
+        
     end if;
 
+-- primary key
+select * from bdc_
+
+select f.field_name
+from bdd_field_table f
+where f.jid_bdd_table = v_id_bdd_table and f.is_primary_key=true
+into v_pk_field_name;
+
+v_sql2 = format('ALTER TABLE %I ADD PRIMARY KEY (%i);',i_table_name, v_pk_field_name);
+
+
+return format(E'executed sql code:\n%s', v_sql);
 end; $function$ language plpgsql;

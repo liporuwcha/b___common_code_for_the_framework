@@ -32,7 +32,7 @@ begin
     -- regex check: view names can have only lowercase letters, numerics, _ and dot.
     SELECT v_view_name ~ '^[a-z0-9_\.]*$' into is_valid_name;
     if is_valid_name = false then
-        raise exception 'Error: Only lowercase letters, numerics, underscore and dot are allowed for view_name: %', v_view_name;        raise exception 'regex is ok';  
+        raise exception 'Error: Only lowercase letters, numerics, underscore and dot are allowed for view_name: %', v_view_name; 
     end if;
 
     select "bdd_view.upsert"(v_view_name, v_temp_source_code, i_notes) into v_text;

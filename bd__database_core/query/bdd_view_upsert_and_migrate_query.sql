@@ -4,11 +4,10 @@
 -- that will insert/update the view definition into bdd_view
 -- Then use Undo ctrl+z to return this query as it was before paste.
 
-select "bdd_view.upsert_and_migrate"(
+
+select * from "bdd_view.upsert_and_migrate"( 
 $sc$
 
 
 
-
-
-$sc$,'')
+$sc$,'');

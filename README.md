@@ -7,7 +7,7 @@
  ![postgres](https://img.shields.io/badge/postgres-orange)
  ![b_common_code_for_the_framework](https://bestia.dev/webpage_hit_counter/get_svg_image/238074482.svg)
 
-## Description
+## Framework project
 
 Sometimes I will abbreviate the project name `liporuwcha` to just `lip` for sake of brevity.  
 With the namespace "b" I will have a working framework that works with database, server and client.
@@ -221,7 +221,7 @@ They are ordered in a tree structure.
 `id_unit` int
 name
 parent_id_unit
-description
+notes
 
 Every object will have a reference, relation, join to bdd_unit with the field `jid_unit`.
 Different projects will have a defined range od `id_unit` so that more teams can develop simultaneously.
@@ -234,7 +234,7 @@ In postgres `domain` is a user-defined data type. It can have constraints that r
 ```sql
 CREATE DOMAIN dm_positive_integer AS integer CHECK (VALUE > 0);
 CREATE DOMAIN dm_system_name AS varchar(100) not null integer check (length(value) > 0);
-CREATE DOMAIN dm_description AS text not null default '';
+CREATE DOMAIN dm_notes AS text not null default '';
 ```
 
 #### bdd_table
