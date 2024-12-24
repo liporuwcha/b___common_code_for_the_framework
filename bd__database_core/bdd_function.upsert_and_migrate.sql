@@ -35,7 +35,7 @@ begin
         raise exception 'Error: Only lowercase letters, numerics, underscore and dot are allowed for function_name: %', v_function_name;        raise exception 'regex is ok';  
     end if;
 
-    select "bdd_function.upsert"(v_function_name, i_source_code) into v_text;
+    select "bdd_function.upsert"(v_function_name, v_temp_source_code) into v_text;
     select "bdd_function.migrate"(v_function_name) into v_text2;
 
     return format(E'%s\n%s', v_text2, v_text);

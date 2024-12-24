@@ -220,9 +220,9 @@ begin
       return format('Inserted function: %I', i_function_name);
    else
       select a.source_code 
-      into v_old_source_code
       from bdc_source_code a
-      where a.object_name = i_function_name;
+      where a.object_name = i_function_name
+      into v_old_source_code;
 
       if i_source_code <> v_old_source_code then
          
@@ -253,7 +253,7 @@ ALTER FUNCTION lip.bdc_function_migrate(i_function_name name, i_source_code text
 CREATE FUNCTION lip.bdc_random_int() RETURNS integer
     LANGUAGE sql
     AS $$
-    SELECT FLOOR(RANDOM()*2147483646) + 1; 
+    select FLOOR(RANDOM()*2147483646::double precision) + 1;
 $$;
 
 
@@ -331,9 +331,9 @@ begin
       return format('Inserted view: %I', i_object_name);
    else
       select a.source_code 
-      into v_old_source_code
       from bdc_source_code a
-      where a.object_name = i_object_name;
+      where a.object_name = i_object_name
+      into v_old_source_code;
 
       if i_source_code <> v_old_source_code then
          if exists(select * from bdc_view_list v where v.view_name=i_object_name) then
@@ -353,8 +353,8 @@ begin
          return format('Updated view: %I', i_object_name);
       end if;
    end if;
-end;
-$$;
+
+end; $$;
 
 
 ALTER FUNCTION lip.bdc_view_migrate(i_object_name name, i_source_code text) OWNER TO postgres;
@@ -374,9 +374,9 @@ declare
     v_text text;
 begin
 
-select f.source_code into v_source_code from bdd_function f where f.function_name=i_function_name;
+select f.source_code from bdd_function f where f.function_name=i_function_name into v_source_code;
 
-select bdc_function_migrate into v_text from bdc_function_migrate(i_function_name, v_source_code);
+select bdc_function_migrate from bdc_function_migrate(i_function_name, v_source_code) into v_text;
 
 return v_text;
 end; $$;
@@ -402,9 +402,9 @@ begin
     end if;
 
     select p.id_bdd_function
-    into v_id_bdd_function
     from   bdd_function p
-    where  p.function_name = i_function_name;
+    where  p.function_name = i_function_name
+    into v_id_bdd_function;
 
     if v_id_bdd_function is null THEN
 
@@ -425,26 +425,80 @@ end; $$;
 ALTER FUNCTION lip."bdd_function.upsert"(i_function_name name, i_source_code text) OWNER TO postgres;
 
 --
--- Name: bdd_function.upsert_and_migrate(name, text); Type: FUNCTION; Schema: lip; Owner: postgres
+-- Name: bdd_function.upsert_and_migrate(text); Type: FUNCTION; Schema: lip; Owner: postgres
 --
 
-CREATE FUNCTION lip."bdd_function.upsert_and_migrate"(i_function_name name, i_source_code text) RETURNS text
+CREATE FUNCTION lip."bdd_function.upsert_and_migrate"(i_source_code text) RETURNS text
     LANGUAGE plpgsql
-    AS $$
+    AS $_$
 -- Update or insert function into bdd_function table. 
+-- select "bdd_function.upsert_and_migrate"('create or replace function "aa123.456_789"() returns text as $x$ begin end;$x$ language plpgsql;');
 declare
     v_id_bdd_function integer;
     v_text text;
     v_text2 text;
+    v_temp_source_code text;
+    v_pos_first integer;
+    v_pos_second integer;
+    v_prefix text='create or replace function "';
+    v_function_name name;
+    is_valid_name boolean;
 begin
-    select "bdd_function.upsert"(i_function_name, i_source_code) into v_text;
-    select "bdd_function.migrate"(i_function_name) into v_text2;
+    -- parse the source code to extract the function name
+    -- the source code must always start with 
+    -- [create or replace function "function_name"]
+    -- the double quote delimiters are mandatory
 
-    return format(E'%s\n%s', v_text, v_text2);
+    select bdc_trim_whitespace(i_source_code) into v_temp_source_code;
+    if not starts_with(v_temp_source_code,v_prefix) then
+        raise exception 'Error: function_name cannot be parsed and extracted from source_code! The function code must start with [create or replace function "]. The double quotes are mandatory.';
+    end if;
+
+    -- find the second double quote to extract the function_name
+    select length(v_prefix)+1 into v_pos_first;
+    select position('"' in substring(v_temp_source_code, v_pos_first ,1000))-1+v_pos_first into v_pos_second;
+    select substring(v_temp_source_code,v_pos_first,v_pos_second-v_pos_first) into v_function_name;
+    raise notice 'function_name: %', v_function_name;
+    -- regex check: function names can have only lowercase letters, numerics, _ and dot.
+    SELECT v_function_name ~ '^[a-z0-9_\.]*$' into is_valid_name;
+    if is_valid_name = false then
+        raise exception 'Error: Only lowercase letters, numerics, underscore and dot are allowed for function_name: %', v_function_name;        raise exception 'regex is ok';  
+    end if;
+
+    select "bdd_function.upsert"(v_function_name, v_temp_source_code) into v_text;
+    select "bdd_function.migrate"(v_function_name) into v_text2;
+
+    return format(E'%s\n%s', v_text2, v_text);
+end; $_$;
+
+
+ALTER FUNCTION lip."bdd_function.upsert_and_migrate"(i_source_code text) OWNER TO postgres;
+
+--
+-- Name: bdd_table.insert(name, text); Type: FUNCTION; Schema: lip; Owner: postgres
+--
+
+CREATE FUNCTION lip."bdd_table.insert"(i_table_name name, i_notes text) RETURNS text
+    LANGUAGE plpgsql
+    AS $$
+-- insert into bdd_table table.
+-- select "bdd_table.insert"('bdd_view2','')
+declare
+    v_id_bdd_table integer;
+    v_text text;
+    v_record record;
+begin
+    insert into bdd_table ( id_bdd_table, table_name, notes )
+    values ( bdc_random_int(), i_table_name, i_notes )
+    returning *
+    into v_record;
+
+    return format('Table inserted %s %s',v_record.id_bdd_table, i_table_name);
+
 end; $$;
 
 
-ALTER FUNCTION lip."bdd_function.upsert_and_migrate"(i_function_name name, i_source_code text) OWNER TO postgres;
+ALTER FUNCTION lip."bdd_table.insert"(i_table_name name, i_notes text) OWNER TO postgres;
 
 --
 -- Name: bdd_table.migrate(name); Type: FUNCTION; Schema: lip; Owner: postgres
@@ -455,7 +509,7 @@ CREATE FUNCTION lip."bdd_table.migrate"(i_table_name name) RETURNS text
     AS $$
 -- checks if the table has all the fields
 -- if needed it adds the fields 
--- select * from "bdd_table.migrate"('test1')
+-- select * from "bdd_table.migrate"('bdd_view')
 declare
     v_row record;
     v_sql text;
@@ -465,7 +519,7 @@ declare
 begin
     -- set the variable for id_bdd_table
     -- the expression will set the variables to NULL if no rows were returned
-    select t.id_bdd_table into v_id_bdd_table from bdd_table t where t.table_name = i_table_name;
+    select t.id_bdd_table from bdd_table t where t.table_name = i_table_name into v_id_bdd_table;
     if v_id_bdd_table is null then
         -- early return
         return format('Error: Definition for %s is not in bdd_table.', i_table_name);
@@ -485,7 +539,7 @@ begin
                 v_sql_fields = format(E'%s ,\n', v_sql_fields);
             end if;
             v_sql_fields = format('%s %s %s %s %s %s', v_sql_fields, v_row.field_name, v_row.data_type, v_row.not_null, v_row.default_constraint, v_row.check_constraint);
-
+            raise notice '%', v_sql_fields;
         END LOOP;
 
         v_sql = format(E'create table %s (\n%s\n)', i_table_name, v_sql_fields);
@@ -510,11 +564,11 @@ begin
         END LOOP;
 
         v_sql = format(E'alter table %s \n%s\n;', i_table_name, v_sql_fields);
-        --execute v_sql;
+        execute v_sql;
         return format(E'executed sql code:\n%s', v_sql);
     end if;
-end;
-$$;
+
+end; $$;
 
 
 ALTER FUNCTION lip."bdd_table.migrate"(i_table_name name) OWNER TO postgres;
@@ -538,7 +592,7 @@ declare
 begin
     -- set the variable for id_bdd_table
     -- the expression will set the variables to NULL if no rows were returned
-    select t.id_bdd_table into v_id_bdd_table from bdd_table t where t.table_name = i_table_name;
+    select t.id_bdd_table from bdd_table t where t.table_name = i_table_name into v_id_bdd_table;
     if v_id_bdd_table is null then
         -- early return
         return format('Error: Definition for %s is not in bdd_table.', i_table_name);
@@ -608,34 +662,227 @@ begin
         -- execute v_sql_field;
     END LOOP;
     return format(E'executed sql code:\n%s', v_sql);
-end;
-$$;
+
+end; $$;
 
 
 ALTER FUNCTION lip."bdd_table.migrate_details"(i_table_name name) OWNER TO postgres;
 
 --
--- Name: test1(name); Type: FUNCTION; Schema: lip; Owner: postgres
+-- Name: bdd_table.update(name, text); Type: FUNCTION; Schema: lip; Owner: postgres
 --
 
-CREATE FUNCTION lip.test1(i_function_name name) RETURNS text
+CREATE FUNCTION lip."bdd_table.update"(i_table_name name, i_notes text) RETURNS text
     LANGUAGE plpgsql
     AS $$
+-- update into bdd_table table.
+-- select "bdd_table.update"('bdd_view','')
+declare
+    v_record record;
+begin
+    update bdd_table 
+    set notes=i_notes
+    where table_name=i_table_name
+    returning *
+    into v_record;
+
+    return format('Table updated %s %s',v_record.id_bdd_table, i_table_name);
+
+end; $$;
+
+
+ALTER FUNCTION lip."bdd_table.update"(i_table_name name, i_notes text) OWNER TO postgres;
+
+--
+-- Name: bdd_table.upsert(name, text); Type: FUNCTION; Schema: lip; Owner: postgres
+--
+
+CREATE FUNCTION lip."bdd_table.upsert"(i_table_name name, i_notes text) RETURNS text
+    LANGUAGE plpgsql
+    AS $$
+-- Update or insert function into bdd_table table.
+-- select "bdd_table.upsert"('bdd_view','')
+declare
+    v_id_bdd_table integer;
+    v_text text;
+begin
+
+    select p.id_bdd_table
+    from   bdd_table p
+    where  p.table_name = i_table_name
+    into v_id_bdd_table;
+
+    if v_id_bdd_table is null THEN
+        select "bdd_table.insert"(i_table_name, i_notes) into v_text;
+        return format('%s',v_text);
+    else
+        select "bdd_table.update"(i_table_name, i_notes) into v_text;
+        return format('%s',v_text);
+    end if;
+end; $$;
+
+
+ALTER FUNCTION lip."bdd_table.upsert"(i_table_name name, i_notes text) OWNER TO postgres;
+
+--
+-- Name: bdd_view.insert(name, text, text); Type: FUNCTION; Schema: lip; Owner: postgres
+--
+
+CREATE FUNCTION lip."bdd_view.insert"(i_view_name name, i_source_code text, i_notes text) RETURNS text
+    LANGUAGE plpgsql
+    AS $$
+-- insert into bdd_view table.
+-- select "bdd_view.insert"('bdd_view2','','')
+declare
+    v_id_bdd_view integer;
+    v_text text;
+    v_record record;
+begin
+    insert into bdd_view ( id_bdd_view, view_name, source_code, notes )
+    values ( bdc_random_int(), i_view_name, i_source_code, i_notes )
+    returning *
+    into v_record;
+
+    return format('Table inserted %s %s',v_record.id_bdd_view, i_view_name);
+
+end; $$;
+
+
+ALTER FUNCTION lip."bdd_view.insert"(i_view_name name, i_source_code text, i_notes text) OWNER TO postgres;
+
+--
+-- Name: bdd_view.migrate(name); Type: FUNCTION; Schema: lip; Owner: postgres
+--
+
+CREATE FUNCTION lip."bdd_view.migrate"(i_view_name name) RETURNS text
+    LANGUAGE plpgsql
+    AS $$
+-- install the view from bdd into postgres
+-- if the view is modified
+-- select "bdd_view.migrate"('bdc_view_drop')
 declare
     v_source_code text;
     v_text text;
 begin
 
-v_source_code = 'xxx';
+select f.source_code from bdd_view f where f.view_name=i_view_name into v_source_code;
 
-return v_source_code;
+select bdc_view_migrate from bdc_view_migrate(i_view_name, v_source_code) into v_text;
+
+return v_text;
 end; $$;
 
 
-ALTER FUNCTION lip.test1(i_function_name name) OWNER TO postgres;
+ALTER FUNCTION lip."bdd_view.migrate"(i_view_name name) OWNER TO postgres;
 
 --
--- Name: bdc_constraint_check_single_column_list; Type: VIEW; Schema: lip; Owner: lip_migration_user
+-- Name: bdd_view.update(name, text, text); Type: FUNCTION; Schema: lip; Owner: postgres
+--
+
+CREATE FUNCTION lip."bdd_view.update"(i_view_name name, i_source_code text, i_notes text) RETURNS text
+    LANGUAGE plpgsql
+    AS $$
+-- update bdd_view table.
+-- select "bdd_view.update"('bdd_view','')
+declare
+    v_record record;
+begin
+    update bdd_view 
+    set source_code=i_source_code, notes=i_notes
+    where view_name=i_view_name
+    returning *
+    into v_record;
+
+    return format('Table updated %s %s',v_record.id_bdd_view, i_view_name);
+
+end; $$;
+
+
+ALTER FUNCTION lip."bdd_view.update"(i_view_name name, i_source_code text, i_notes text) OWNER TO postgres;
+
+--
+-- Name: bdd_view.upsert(name, text, text); Type: FUNCTION; Schema: lip; Owner: postgres
+--
+
+CREATE FUNCTION lip."bdd_view.upsert"(i_view_name name, i_source_code text, i_notes text) RETURNS text
+    LANGUAGE plpgsql
+    AS $$
+-- Update or insert function into bdd_view table.
+-- select "bdd_view.upsert"('bdd_view','')
+declare
+    v_id_bdd_view integer;
+    v_text text;
+begin
+
+    select p.id_bdd_view
+    from   bdd_view p
+    where  p.view_name = i_view_name
+    into v_id_bdd_view;
+
+    if v_id_bdd_view is null THEN
+        select "bdd_view.insert"(i_view_name, i_source_code, i_notes) into v_text;
+        return format('%s',v_text);
+    else
+        select "bdd_view.update"(i_view_name, i_source_code, i_notes) into v_text;
+        return format('%s',v_text);
+    end if;
+end; $$;
+
+
+ALTER FUNCTION lip."bdd_view.upsert"(i_view_name name, i_source_code text, i_notes text) OWNER TO postgres;
+
+--
+-- Name: bdd_view.upsert_and_migrate(text, text); Type: FUNCTION; Schema: lip; Owner: postgres
+--
+
+CREATE FUNCTION lip."bdd_view.upsert_and_migrate"(i_source_code text, i_notes text) RETURNS text
+    LANGUAGE plpgsql
+    AS $_$
+-- Update or insert view into bdd_view table. 
+-- select "bdd_view.upsert_and_migrate"('create or replace view "aa123.456_789"() returns text as $x$ begin end;$x$ language plpgsql;');
+declare
+    v_id_bdd_view integer;
+    v_text text;
+    v_text2 text;
+    v_temp_source_code text;
+    v_pos_first integer;
+    v_pos_second integer;
+    v_prefix text='create or replace view "';
+    v_view_name name;
+    is_valid_name boolean;
+begin
+    -- parse the source code to extract the view name
+    -- the source code must always start with 
+    -- [create or replace view "view_name"]
+    -- the double quote delimiters are mandatory
+
+    select bdc_trim_whitespace(i_source_code) into v_temp_source_code;
+    if not starts_with(v_temp_source_code,v_prefix) then
+        raise exception 'Error: view_name cannot be parsed and extracted from source_code! The view code must start with [create or replace view "]. The double quotes are mandatory.';
+    end if;
+
+    -- find the second double quote to extract the view_name
+    select length(v_prefix)+1 into v_pos_first;
+    select position('"' in substring(v_temp_source_code, v_pos_first ,1000))-1+v_pos_first into v_pos_second;
+    select substring(v_temp_source_code,v_pos_first,v_pos_second-v_pos_first) into v_view_name;
+    raise notice 'view_name: %', v_view_name;
+    -- regex check: view names can have only lowercase letters, numerics, _ and dot.
+    SELECT v_view_name ~ '^[a-z0-9_\.]*$' into is_valid_name;
+    if is_valid_name = false then
+        raise exception 'Error: Only lowercase letters, numerics, underscore and dot are allowed for view_name: %', v_view_name;        raise exception 'regex is ok';  
+    end if;
+
+    select "bdd_view.upsert"(v_view_name, v_temp_source_code, i_notes) into v_text;
+    select "bdd_view.migrate"(v_view_name) into v_text2;
+
+    return format(E'%s\n%s', v_text2, v_text);
+end; $_$;
+
+
+ALTER FUNCTION lip."bdd_view.upsert_and_migrate"(i_source_code text, i_notes text) OWNER TO postgres;
+
+--
+-- Name: bdc_constraint_check_single_column_list; Type: VIEW; Schema: lip; Owner: postgres
 --
 
 CREATE VIEW lip.bdc_constraint_check_single_column_list AS
@@ -650,7 +897,7 @@ CREATE VIEW lip.bdc_constraint_check_single_column_list AS
   WHERE (((tc.table_schema)::name = 'lip'::name) AND ((tc.constraint_type)::text = 'CHECK'::text));
 
 
-ALTER TABLE lip.bdc_constraint_check_single_column_list OWNER TO lip_migration_user;
+ALTER TABLE lip.bdc_constraint_check_single_column_list OWNER TO postgres;
 
 --
 -- Name: bdc_field_table_list; Type: VIEW; Schema: lip; Owner: postgres
@@ -675,6 +922,21 @@ CREATE VIEW lip.bdc_field_table_list AS
 ALTER TABLE lip.bdc_field_table_list OWNER TO postgres;
 
 --
+-- Name: bdc_function.list; Type: VIEW; Schema: lip; Owner: postgres
+--
+
+CREATE VIEW lip."bdc_function.list" AS
+ SELECT (t.routine_name)::name AS function_name,
+    (t.specific_name)::name AS specific_name,
+    (t.type_udt_name)::name AS type_udt_name
+   FROM information_schema.routines t
+  WHERE (((t.routine_schema)::name = 'lip'::name) AND ((t.routine_type)::text = 'FUNCTION'::text))
+  ORDER BY (t.routine_name)::name;
+
+
+ALTER TABLE lip."bdc_function.list" OWNER TO postgres;
+
+--
 -- Name: bdc_function_list; Type: VIEW; Schema: lip; Owner: lip_migration_user
 --
 
@@ -690,7 +952,7 @@ CREATE VIEW lip.bdc_function_list AS
 ALTER TABLE lip.bdc_function_list OWNER TO lip_migration_user;
 
 --
--- Name: bdc_role_list; Type: VIEW; Schema: lip; Owner: lip_migration_user
+-- Name: bdc_role_list; Type: VIEW; Schema: lip; Owner: postgres
 --
 
 CREATE VIEW lip.bdc_role_list AS
@@ -705,7 +967,7 @@ CREATE VIEW lip.bdc_role_list AS
   ORDER BY pg_user.usename DESC;
 
 
-ALTER TABLE lip.bdc_role_list OWNER TO lip_migration_user;
+ALTER TABLE lip.bdc_role_list OWNER TO postgres;
 
 SET default_tablespace = '';
 
@@ -725,7 +987,7 @@ CREATE TABLE lip.bdc_source_code (
 ALTER TABLE lip.bdc_source_code OWNER TO lip_migration_user;
 
 --
--- Name: bdc_table_list; Type: VIEW; Schema: lip; Owner: lip_migration_user
+-- Name: bdc_table_list; Type: VIEW; Schema: lip; Owner: postgres
 --
 
 CREATE VIEW lip.bdc_table_list AS
@@ -734,7 +996,7 @@ CREATE VIEW lip.bdc_table_list AS
   WHERE (((t.table_schema)::name = 'lip'::name) AND ((t.table_type)::text = 'BASE TABLE'::text));
 
 
-ALTER TABLE lip.bdc_table_list OWNER TO lip_migration_user;
+ALTER TABLE lip.bdc_table_list OWNER TO postgres;
 
 --
 -- Name: bdc_view_list; Type: VIEW; Schema: lip; Owner: lip_migration_user
@@ -791,6 +1053,7 @@ ALTER TABLE lip.bdd_field_table OWNER TO lip_migration_user;
 CREATE TABLE lip.bdd_table (
     id_bdd_table integer NOT NULL,
     table_name name DEFAULT ''::name NOT NULL,
+    notes text DEFAULT ''::text NOT NULL,
     CONSTRAINT bdd_table_table_name_check CHECK ((length((table_name)::text) > 2))
 );
 
@@ -851,6 +1114,20 @@ CREATE TABLE lip.bdd_function (
 ALTER TABLE lip.bdd_function OWNER TO postgres;
 
 --
+-- Name: bdd_view; Type: TABLE; Schema: lip; Owner: postgres
+--
+
+CREATE TABLE lip.bdd_view (
+    id_bdd_view integer NOT NULL,
+    view_name name NOT NULL,
+    notes text DEFAULT ''::text NOT NULL,
+    source_code text NOT NULL
+);
+
+
+ALTER TABLE lip.bdd_view OWNER TO postgres;
+
+--
 -- Name: pk_bdd_function_sequence_b; Type: SEQUENCE; Schema: lip; Owner: postgres
 --
 
@@ -866,24 +1143,12 @@ CREATE SEQUENCE lip.pk_bdd_function_sequence_b
 ALTER TABLE lip.pk_bdd_function_sequence_b OWNER TO postgres;
 
 --
--- Name: test1; Type: TABLE; Schema: lip; Owner: postgres
---
-
-CREATE TABLE lip.test1 (
-    id integer,
-    table_name character varying(10) DEFAULT ''::character varying NOT NULL
-);
-
-
-ALTER TABLE lip.test1 OWNER TO postgres;
-
---
 -- Data for Name: bdc_source_code; Type: TABLE DATA; Schema: lip; Owner: lip_migration_user
 --
 
 COPY lip.bdc_source_code (object_name, source_code) FROM stdin;
 \.
-COPY lip.bdc_source_code (object_name, source_code) FROM '$$PATH$$/3443.dat';
+COPY lip.bdc_source_code (object_name, source_code) FROM '$$PATH$$/3457.dat';
 
 --
 -- Data for Name: bdd_domain; Type: TABLE DATA; Schema: lip; Owner: lip_migration_user
@@ -891,7 +1156,7 @@ COPY lip.bdc_source_code (object_name, source_code) FROM '$$PATH$$/3443.dat';
 
 COPY lip.bdd_domain (id_bdd_domain, domain_name, description, source_code) FROM stdin;
 \.
-COPY lip.bdd_domain (id_bdd_domain, domain_name, description, source_code) FROM '$$PATH$$/3446.dat';
+COPY lip.bdd_domain (id_bdd_domain, domain_name, description, source_code) FROM '$$PATH$$/3460.dat';
 
 --
 -- Data for Name: bdd_field_table; Type: TABLE DATA; Schema: lip; Owner: lip_migration_user
@@ -899,7 +1164,7 @@ COPY lip.bdd_domain (id_bdd_domain, domain_name, description, source_code) FROM 
 
 COPY lip.bdd_field_table (id_bdd_field_table, jid_bdd_table, field_name, data_type, not_null, default_constraint, check_constraint) FROM stdin;
 \.
-COPY lip.bdd_field_table (id_bdd_field_table, jid_bdd_table, field_name, data_type, not_null, default_constraint, check_constraint) FROM '$$PATH$$/3445.dat';
+COPY lip.bdd_field_table (id_bdd_field_table, jid_bdd_table, field_name, data_type, not_null, default_constraint, check_constraint) FROM '$$PATH$$/3459.dat';
 
 --
 -- Data for Name: bdd_function; Type: TABLE DATA; Schema: lip; Owner: postgres
@@ -907,23 +1172,23 @@ COPY lip.bdd_field_table (id_bdd_field_table, jid_bdd_table, field_name, data_ty
 
 COPY lip.bdd_function (id_bdd_function, source_code, function_name) FROM stdin;
 \.
-COPY lip.bdd_function (id_bdd_function, source_code, function_name) FROM '$$PATH$$/3448.dat';
+COPY lip.bdd_function (id_bdd_function, source_code, function_name) FROM '$$PATH$$/3461.dat';
 
 --
 -- Data for Name: bdd_table; Type: TABLE DATA; Schema: lip; Owner: lip_migration_user
 --
 
-COPY lip.bdd_table (id_bdd_table, table_name) FROM stdin;
+COPY lip.bdd_table (id_bdd_table, table_name, notes) FROM stdin;
 \.
-COPY lip.bdd_table (id_bdd_table, table_name) FROM '$$PATH$$/3444.dat';
+COPY lip.bdd_table (id_bdd_table, table_name, notes) FROM '$$PATH$$/3458.dat';
 
 --
--- Data for Name: test1; Type: TABLE DATA; Schema: lip; Owner: postgres
+-- Data for Name: bdd_view; Type: TABLE DATA; Schema: lip; Owner: postgres
 --
 
-COPY lip.test1 (id, table_name) FROM stdin;
+COPY lip.bdd_view (id_bdd_view, view_name, notes, source_code) FROM stdin;
 \.
-COPY lip.test1 (id, table_name) FROM '$$PATH$$/3447.dat';
+COPY lip.bdd_view (id_bdd_view, view_name, notes, source_code) FROM '$$PATH$$/3463.dat';
 
 --
 -- Name: pk_bdd_function_sequence_b; Type: SEQUENCE SET; Schema: lip; Owner: postgres
@@ -957,6 +1222,14 @@ ALTER TABLE ONLY lip.bdd_table
 
 
 --
+-- Name: bdd_field_table fk_bdd_field_table_jid_bdd_table; Type: FK CONSTRAINT; Schema: lip; Owner: lip_migration_user
+--
+
+ALTER TABLE ONLY lip.bdd_field_table
+    ADD CONSTRAINT fk_bdd_field_table_jid_bdd_table FOREIGN KEY (jid_bdd_table) REFERENCES lip.bdd_table(id_bdd_table);
+
+
+--
 -- Name: DATABASE lip_01; Type: ACL; Schema: -; Owner: postgres
 --
 
@@ -975,14 +1248,6 @@ GRANT USAGE ON SCHEMA lip TO lip_app_role;
 
 
 --
--- Name: TABLE bdc_constraint_check_single_column_list; Type: ACL; Schema: lip; Owner: lip_migration_user
---
-
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE lip.bdc_constraint_check_single_column_list TO lip_app_role;
-GRANT SELECT ON TABLE lip.bdc_constraint_check_single_column_list TO lip_ro_role;
-
-
---
 -- Name: TABLE bdc_function_list; Type: ACL; Schema: lip; Owner: lip_migration_user
 --
 
@@ -991,27 +1256,11 @@ GRANT SELECT ON TABLE lip.bdc_function_list TO lip_ro_role;
 
 
 --
--- Name: TABLE bdc_role_list; Type: ACL; Schema: lip; Owner: lip_migration_user
---
-
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE lip.bdc_role_list TO lip_app_role;
-GRANT SELECT ON TABLE lip.bdc_role_list TO lip_ro_role;
-
-
---
 -- Name: TABLE bdc_source_code; Type: ACL; Schema: lip; Owner: lip_migration_user
 --
 
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE lip.bdc_source_code TO lip_app_role;
 GRANT SELECT ON TABLE lip.bdc_source_code TO lip_ro_role;
-
-
---
--- Name: TABLE bdc_table_list; Type: ACL; Schema: lip; Owner: lip_migration_user
---
-
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE lip.bdc_table_list TO lip_app_role;
-GRANT SELECT ON TABLE lip.bdc_table_list TO lip_ro_role;
 
 
 --

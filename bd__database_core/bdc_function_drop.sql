@@ -1,10 +1,10 @@
-create or replace function bdc_function_drop(i_name name)
+create or replace function "bdc_function_drop"(i_name name)
 returns text
 as $function$
 -- drop all function overloads with given i_name regardless of function parameters
 -- test it, create the function test1() and then drop it: 
 -- CREATE FUNCTION test1(i integer) RETURNS integer AS $x$ BEGIN RETURN i + 1; END; $x$ LANGUAGE plpgsql;
--- select bdc_function_drop('test1');   
+-- select "bdc_function_drop"('test1');   
 declare
    v_sql text;
    v_functions_dropped int;

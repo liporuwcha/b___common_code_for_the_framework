@@ -1,9 +1,6 @@
-select bdc_view_migrate('bdc_role_list',
-$source_code$
-
-create or replace view bdc_role_list
+create or replace view "bdc_role_list"
 as
--- select * from bdc_role_list ;
+-- select * from "bdc_role_list" ;
 select usename as role_name,
   case
      when usesuper and usecreatedb then
@@ -17,5 +14,3 @@ select usename as role_name,
   end role_attributes
 from pg_catalog.pg_user
 order by role_name desc;
-
-$source_code$);

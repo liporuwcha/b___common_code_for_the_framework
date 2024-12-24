@@ -7,7 +7,7 @@ declare
     v_text text;
 begin
 
-    if not starts_with(bdc_trim_whitespace(i_source_code), format('create or replace function %I', i_function_name)) then
+    if not starts_with(bdc_trim_whitespace(i_source_code), format('create or replace function "%I"', i_function_name)) then
         return format('Error: %s function name is not right.', i_function_name);
     end if;
 

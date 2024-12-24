@@ -1,4 +1,4 @@
-create or replace function bdc_view_migrate(i_object_name name, i_source_code text)
+create or replace function "bdc_view_migrate"(i_object_name name, i_source_code text)
 returns text 
 as $function$
 -- checks if the view is already installed and if the bdc_source_code is different

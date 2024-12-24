@@ -161,7 +161,7 @@ For backup run this in bash terminal inside the container.
 
 ```bash
 mkdir db_backup
-pg_dump -F t -U postgres -h localhost -p 5432 lip_01 > db_backup/lip_01_2024_12_21.tar
+pg_dump -F t -U postgres -h localhost -p 5432 lip_01 > db_backup/lip_01_2024_12_24.tar
 ls db_backup
 ```
 
@@ -169,7 +169,7 @@ Run in the parent OS to download from the container over ssh:
 
 ```bash
 # download backup over ssh for development and testing
-scp rustdevuser@crustde:/home/rustdevuser/db_backup/lip_01_2024_12_21.tar db_backup/lip_01_2024_12_21.tar
+scp rustdevuser@crustde:/home/rustdevuser/db_backup/lip_01_2024_12_24.tar db_backup/lip_01_2024_12_24.tar
 ```
 
 The dump file is just gz compressed plain text. It is easily searchable with a standard text editor. Nice for my search-all-and replace approach!
@@ -180,7 +180,7 @@ For restore run this from the VSCode terminal inside the project folder when con
 
 ```bash
 createdb -U admin -h localhost -p 5432 lip_02; 
-pg_restore -c -U admin -h localhost -p 5432 -d lip_02 db_backup/lip_01_2024_12_21.tar
+pg_restore -c -U admin -h localhost -p 5432 -d lip_02 db_backup/lip_01_2024_12_24.tar
 ```
 
 ### bdc_ database lowest components
@@ -194,7 +194,7 @@ In `lip` I will never use directly postgres components, but always this translat
 [bdc_view_list.sql](bd__database_core/bdc_view_list.sql)  
 [bdc_view_migrate.sql](bd__database_core/bdc_view_migrate.sql)  
 
-[bdc_function_list.sql](bd__database_core/bdc_function_list.sql)  
+[bdc_function.list.sql](bd__database_core/bdc_function.list.sql)  
 [bdc_function_migrate.sql](bd__database_core/bdc_function_migrate.sql)  
 [bdc_function_drop.sql](bd__database_core/bdc_function_drop.sql)  
 

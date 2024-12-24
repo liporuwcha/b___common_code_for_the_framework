@@ -13,16 +13,16 @@ create table bdc_source_code
     constraint bdc_source_code_pkey primary key (object_name)
 );
 
-create or replace view bdc_function_list
+create or replace view "bdc_function.list"
 as
 -- only lip functions
--- select * from bdc_function_list ;
-select t.routine_name::name, 
+-- select * from "bdc_function.list" ;
+select t.routine_name::name as function_name, 
 t.specific_name::name, 
 t.type_udt_name::name
 from information_schema.routines t
 where t.routine_schema='lip' and t.routine_type='FUNCTION'
-order by t.routine_name;
+order by function_name;
 
 create view bdc_view_list
 as
@@ -75,7 +75,7 @@ declare
 begin
 
    if not exists(select * from bdc_source_code a where a.object_name = i_object_name) then
-      if exists(select * from bdc_function_list p where p.routine_name = i_object_name) then
+      if exists(select * from "bdc_function.list" p where p.routine_name = i_object_name) then
          select bdc_function_drop(i_object_name) into v_void;
       end if;
 
@@ -91,7 +91,7 @@ begin
       where a.object_name = i_object_name;
 
       if i_source_code <> v_old_source_code then
-         if exists(select * from bdc_function_list p where p.routine_name = i_object_name) then
+         if exists(select * from "bdc_function.list" p where p.routine_name = i_object_name) then
             select bdc_function_drop(i_object_name) into v_void;
          end if;
          

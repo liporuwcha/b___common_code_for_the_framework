@@ -1,6 +1,3 @@
-select bdc_view_migrate('bdd_field_table.details',
-$source_code$
-
 create or replace view "bdd_field_table.details"
 as
 -- more details for field definitions are used to compare with the postgres definition
@@ -39,4 +36,3 @@ from bdd_table t
 join bdd_field_table f on f.jid_bdd_table=t.id_bdd_table
 join bdc_field_table_list c on c.table_name=t.table_name and c.column_name=f.field_name
 
-$source_code$);

@@ -15,6 +15,10 @@
 16	5	source_code	text	not null		
 2	1	source_code	text	not null		
 15	5	description	text	not null	default ''	
+1112722879	1494496930	id_bdd_view	integer	not null		
+4012463	1494496930	view_name	name	not null		
+2071504602	1494496930	notes	text	not null	default ''::text	
+370205437	1494496930	source_code	text	not null		
 13	5	id_bdd_domain	integer	not null		check (id_bdd_domain > 0)
 11	4	unit_name	name	not null		check (length(unit_name) > 0)
 \.

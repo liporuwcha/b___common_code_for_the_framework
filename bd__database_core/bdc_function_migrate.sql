@@ -1,4 +1,4 @@
-create or replace function bdc_function_migrate(i_function_name name, i_source_code text)
+create or replace function "bdc_function_migrate"(i_function_name name, i_source_code text)
 returns text 
 as $function$
 -- checks if the function is already installed and if the content of bdc_source_code is different
@@ -12,7 +12,7 @@ declare
 begin
 
    if not exists(select * from bdc_source_code a where a.object_name = i_function_name) then
-      if exists(select * from bdc_function_list p where p.routine_name = i_function_name) then
+      if exists(select * from "bdc_function.list" p where p.routine_name = i_function_name) then
          -- must not drop functions because of the error: 
          -- cannot drop function because other objects depend on it.
          select bdc_function_drop(i_function_name) into v_void;
