@@ -24,7 +24,7 @@ I will use Postgres all the way. The database is the most important part of the 
 #### bda_development environment inside a Linux container
 
 For development I will have Postgres in a Linux container. I will add this container to the [Podman pod for development CRUSTDE](https://github.com/CRUSTDE-ContainerizedRustDevEnv/crustde_cnt_img_pod). I will use the prepared script in [crustde_install/pod_with_rust_pg_vscode](https://github.com/CRUSTDE-ContainerizedRustDevEnv/crustde_cnt_img_pod/tree/main/crustde_install/pod_with_rust_pg_vscode).  
-This postgres server listens to localhost port 5432. The administrator user is called "admin" and the default password is well known.  
+This postgres server listens to localhost port 5432. The administrator user is called "postgres" and the default password is well known.  
 
 Inside the container CRUSTDE I can use the client `psql` to work with the Postgres server. For that I need the bash terminal of the CRUSTDE container. I work with VSCode remote-SSH extension to connect to the container. I invoke it like this from git-bash:
 
@@ -112,6 +112,10 @@ We need a `lip_migration_user` that can create database objects. In postgres the
 Than we will make a role named `lip_app_user` that can work with the data, but cannot administer the database.
 An one more role `lip_ro_user` that can read the data, but cannot change it.
 
+### dbd_owner
+
+It is very important in PostgreSQL who is the owner of the object. Only the owner or superuser can alter the object. All objects in the `lip` database will have the owner `lip_migration_user`.
+
 ### bdb_migration
 
 The sql language or postgres don't have anything useful for database migration. Migration is the term used when we need to update the schema, add tables or columns, views or functions. This is not just an option, the migration is unavoidable when we iteratively develop a database application. Third party solutions are just terrible.
@@ -179,8 +183,10 @@ The dump file is just gz compressed plain text. It is easily searchable with a s
 For restore run this from the VSCode terminal inside the project folder when connected to CRUSTDE.
 
 ```bash
-createdb -U admin -h localhost -p 5432 lip_02; 
-pg_restore -c -U admin -h localhost -p 5432 -d lip_02 db_backup/lip_01_2024_12_24.tar
+# first create the roles, users and database manually 
+# run the sql script from bd__database_core/bdb_database_lip_init_1.sql
+# run the sql script from bd__database_core/bdb_database_lip_init_2.sql
+pg_restore -c -U postgres -h localhost -p 5432 -d lip_02 db_backup/lip_01_2024_12_24.tar
 ```
 
 ### bdc_ database lowest components
