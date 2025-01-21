@@ -189,6 +189,51 @@ For restore run this from the VSCode terminal inside the project folder when con
 pg_restore -c -U postgres -h localhost -p 5432 -d lip_02 db_backup/lip_01_2024_12_24.tar
 ```
 
+#### bdb_postgres_container
+
+To work inside the postgres container open the bash shell with podman exec:
+
+```bash
+podman exec -it 34ce188ee4da /bin/bash
+```
+
+Then I can use pg commands to work with the postgres server:
+
+```bash
+# change interactive user to superuser postgres
+su postgres
+# server version
+pg_config --version
+# client version
+psql --version
+```
+
+#### bdb_postgres_database_cluster
+
+Postgres likes to have databases separated in "database clusters" on the same server. Because backups and point in time work on the whole cluster thing and not on a database level.    
+Confusing nomenclature: "Database cluster" or "instance" or "data directory" or "data area".
+Old original cluster is in `/var/lib/postgresql/data`, but it was not created with `pg_createcluster`. Bad.  
+Debian has some wrapper commands for better work with database clusters.
+My instance_name will be `dev_01`.
+
+```bash
+pg_createcluster 15 dev_01 
+# created the folder /var/lib/postgresql/15/dev_01 on port 5433
+pg_ctlcluster 15 dev_01 start 
+# list the database clusters that were created with pg_createcluster
+pg_lsclusters 
+#Ver Cluster Port Status Owner    Data directory                Log file
+#15  dev_01  5433 online postgres /var/lib/postgresql/15/dev_01 /var/log/postgresql/postgresql-15-dev_01.log
+#15  dev_02  5434 online postgres /var/lib/postgresql/15/dev_02 /var/log/postgresql/postgresql-15-dev_02.log
+```
+
+Every cluster gets its own port, so we can connect to them separately.
+
+### bdb_Point_In_Time_Recovery
+
+<https://pgdash.io/blog/postgres-incremental-backup-recovery.html>  
+
+
 ### bdc_ database lowest components
 
 A translation layer between `lip` code and the postgres low code and objects.

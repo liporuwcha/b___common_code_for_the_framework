@@ -1,6 +1,6 @@
 create or replace function "bdd_view.upsert"(i_view_name name, i_source_code text, i_notes text)
 returns text 
-as $function$
+language plpgsql as $function$
 -- Update or insert function into bdd_view table.
 -- select "bdd_view.upsert"('bdd_view','')
 declare
@@ -20,4 +20,4 @@ begin
         select "bdd_view.update"(i_view_name, i_source_code, i_notes) into v_text;
         return format('%s',v_text);
     end if;
-end; $function$ language plpgsql;
+end; $function$;
