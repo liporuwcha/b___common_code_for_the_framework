@@ -23,6 +23,8 @@ begin
     RAISE NOTICE 'Found definition for % in bdd_table', i_table_name;
 
     if not exists(select * from bdc_table_list a where a.table_name=i_table_name) then
+        RAISE NOTICE 'Table not exists.';
+
         -- if table not exists, create it with all fields in one go.
         -- prepare code for fields
         FOR v_row IN
@@ -40,6 +42,8 @@ begin
         v_sql = format(E'create table %s (\n%s\n)', i_table_name, v_sql_fields);
         execute v_sql;
     else
+        RAISE NOTICE 'Table exists';
+
         -- table exists, what fields don't exist?
         -- prepare code for missing fields
         FOR v_row IN
@@ -53,16 +57,20 @@ begin
                 v_sql_fields = format(E'%s ,\n', v_sql_fields);
             end if;
             v_sql_fields = format('add column %s %s %s %s %s %s', v_sql_fields, v_row.field_name, v_row.data_type, v_row.not_null, v_row.default_constraint, v_row.check_constraint);
+            RAISE NOTICE 'v_sql_fields %', v_sql_fields;
 
         END LOOP;
 
         v_sql = format(E'alter table %s \n%s\n;', i_table_name, v_sql_fields);
+        RAISE NOTICE 'v_sql %', v_sql;
+
         execute v_sql;
         
     end if;
 
+/*
 -- primary key
-select * from bdc_
+-- select * from bdc_
 
 select f.field_name
 from bdd_field_table f
@@ -70,7 +78,8 @@ where f.jid_bdd_table = v_id_bdd_table and f.is_primary_key=true
 into v_pk_field_name;
 
 v_sql2 = format('ALTER TABLE %I ADD PRIMARY KEY (%i);',i_table_name, v_pk_field_name);
-
+    RAISE NOTICE 'v_sql2 %', v_sql2;
+*/
 
 return format(E'executed sql code:\n%s', v_sql);
 end; $function$ language plpgsql;

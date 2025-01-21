@@ -165,7 +165,7 @@ For backup run this in bash terminal inside the container.
 
 ```bash
 mkdir db_backup
-pg_dump -F t -U postgres -h localhost -p 5432 lip_01 > db_backup/lip_01_2024_12_24.tar
+pg_dump -F t -U postgres -h localhost -p 5433 lip_01 > db_backup/lip_01_2025_01_21.tar
 ls db_backup
 ```
 
@@ -186,7 +186,7 @@ For restore run this from the VSCode terminal inside the project folder when con
 # first create the roles, users and database manually 
 # run the sql script from bd__database_core/bdb_database_lip_init_1.sql
 # run the sql script from bd__database_core/bdb_database_lip_init_2.sql
-pg_restore -c -U postgres -h localhost -p 5432 -d lip_02 db_backup/lip_01_2024_12_24.tar
+pg_restore -c -U postgres -h localhost -p 5433 -d lip_01 db_backup/lip_01_2025_01_20.tar
 ```
 
 #### bdb_postgres_container
@@ -200,7 +200,7 @@ podman exec -it 34ce188ee4da /bin/bash
 Then I can use pg commands to work with the postgres server:
 
 ```bash
-# change interactive user to superuser postgres
+# change interactive user to superuser `postgres`
 su postgres
 # server version
 pg_config --version
@@ -228,10 +228,29 @@ pg_lsclusters
 ```
 
 Every cluster gets its own port, so we can connect to them separately.
+The local user `postgres` can connect over local Unix domain socket connections.
+Create a password for user `postgres` in psql:
+
+```bash
+# change interactive user to superuser `postgres`
+su postgres
+psql -U postgres -p 5433
+#psql (15.10 (Debian 15.10-1.pgdg120+1))
+\password postgres
+#Enter new password for user "postgres":
+#Enter it again:
+\q
+```
 
 ### bdb_Point_In_Time_Recovery
 
 <https://pgdash.io/blog/postgres-incremental-backup-recovery.html>  
+
+1. Close the WAL of the database cluster
+
+`pg_ctl stop` closed the whole container???
+
+
 
 
 ### bdc_ database lowest components
