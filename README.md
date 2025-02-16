@@ -159,9 +159,105 @@ run under user `lip_migration_user` on database `lip_01`
 [bdb_database_lip_init_4.sql](bd_database_core/bdb_database_lip_init_4.sql)  
 Then we need to initialize the database. In this code there will be the SQL statement to prepare a `seed lip database` that can be then upgraded and work with. This initialization uses knowledge from other parts of the project, so it will be repeated in some way.
 
-#### bdb_backup
+#### bdb_postgres_container
 
-For backup run this in bash terminal inside the container.
+To work inside the postgres container open the bash shell with podman exec:
+
+```bash
+podman exec -it crustde_postgres_cnt /bin/bash
+```
+
+Then I can use pg commands to work with the postgres server:
+
+```bash
+# we login as root@crustde_pod:/#
+# if needed install nano
+apt update && apt upgrade
+apt install nano
+# change interactive user to superuser `postgres`
+su postgres
+# postgres@crustde_pod:/$
+# server version
+pg_config --version
+# PostgreSQL 15.10 (Debian 15.10-1.pgdg120+1)
+# client version
+psql --version
+```
+
+#### bdb_postgres_database_cluster
+
+Postgres likes to have databases separated in "database clusters" on the same server. Because backups and `PITR` `point in time recovery` work on the whole cluster thing and not on a database level.  
+Confusing nomenclature: "Database cluster" or "instance" or "data directory" or "data area".
+Old original cluster is in `/var/lib/postgresql/data`, but it was not created with `pg_createcluster`. Bad.  
+
+Remove this cluster as soon as possible, before it has any data inside.
+This cluster is created even after `apt upgrade`.
+First check with psql:
+
+```bash
+# connect on default port 5432
+su postgres
+psql
+# if this cluster exists, stop it and remove it
+\q
+pg_ctl stop -D /var/lib/postgresql/data
+```
+
+Debian has some wrapper commands for better work with database clusters.
+My instance_name will be `lip_dev_01`.
+
+```bash
+pg_createcluster --port=6000 15 lip_dev_01 
+# created the folder /var/lib/postgresql/15/lip_dev_01 on port 6000
+# we can write the cluster name inside postgresql.conf
+pg_ctlcluster 15 lip_dev_01 start 
+# list the database clusters that were created with pg_createcluster
+pg_lsclusters 
+#Ver Cluster     Port Status Owner    Data directory                    Log file
+#15  lip_dev_01  5433 online postgres /var/lib/postgresql/15/lip_dev_01 /var/log/postgresql/postgresql-15-lip_dev_01.log
+#15  lip_dev_02  5434 online postgres /var/lib/postgresql/15/lip_dev_02 /var/log/postgresql/postgresql-15-lip_dev_02.log
+```
+
+The `postgresql.conf` in Debian is in the folder `/etc/postgresql/15/dev_01`.
+
+Every cluster gets its own port, so we can connect to them separately.
+The local user `postgres` can connect over local Unix domain socket connections.
+Create a password for user `postgres` in psql:
+
+```bash
+# change interactive user to superuser `postgres`
+su postgres
+psql -U postgres -p 5433
+#psql (15.10 (Debian 15.10-1.pgdg120+1))
+\password postgres
+#Enter new password for user "postgres": ***
+#Enter it again: ***
+
+# check the cluster name
+SHOW cluster_name;
+# cluster_name = '15/dev_01'
+\q
+```
+
+I will not use the default `cluster` on port 5432, because it makes it confusing what cluster are we connected.
+
+#### clusters for dev, test and prod instances
+
+The name of the cluster and the folder of the cluster is created the same by the `pg_createcluster` command.  
+For development I will use a dev suffix like: `lip_dev_01`, `lip_dev_02`, `lip_test_01`, `lip_prod_01`,...
+
+#### backup or dump
+
+Postgres has 2 different methods for backups.  
+The word `dump` is used to create sql code that can recreate the database. This is called also "logical backup".  
+The dump can be created for a single database.
+
+`Backup` or `base_backup` is "physical backup" and it makes copies of the files for database and for transactions.
+The backup can be done only for the whole "cluster". This can be used for "point in time recovery" PITR.
+
+#### bdb_dump
+
+For this dump or "logitech backup" run this in bash terminal inside the container.
 
 ```bash
 mkdir db_backup
@@ -176,9 +272,9 @@ Run in the parent OS to download from the container over ssh:
 scp rustdevuser@crustde:/home/rustdevuser/db_backup/lip_01_2024_12_24.tar db_backup/lip_01_2024_12_24.tar
 ```
 
-The dump file is just gz compressed plain text. It is easily searchable with a standard text editor. Nice for my search-all-and replace approach!
+The dump file is just gz compressed plain text of sql code. It is easily searchable with a standard text editor. Nice for my search-all-and replace approach!
 
-#### bdb_restore
+#### bdb_restore from dump
 
 For restore run this from the VSCode terminal inside the project folder when connected to CRUSTDE.
 
@@ -189,62 +285,47 @@ For restore run this from the VSCode terminal inside the project folder when con
 pg_restore -c -U postgres -h localhost -p 5433 -d lip_01 db_backup/lip_01_2025_01_20.tar
 ```
 
-#### bdb_postgres_container
+### bdb_basebackup
 
-To work inside the postgres container open the bash shell with podman exec:
+The "physical backup" in Postgres is called `pg_basebackup`.  
+It can make the backup only of the whole "database cluster". Cannot do the backup of a single database.  
+This kind of backup allows to make PITR "point in time recovery".
 
-```bash
-podman exec -it 34ce188ee4da /bin/bash
-```
 
-Then I can use pg commands to work with the postgres server:
 
-```bash
-# change interactive user to superuser `postgres`
-su postgres
-# server version
-pg_config --version
-# client version
-psql --version
-```
-
-#### bdb_postgres_database_cluster
-
-Postgres likes to have databases separated in "database clusters" on the same server. Because backups and point in time work on the whole cluster thing and not on a database level.    
-Confusing nomenclature: "Database cluster" or "instance" or "data directory" or "data area".
-Old original cluster is in `/var/lib/postgresql/data`, but it was not created with `pg_createcluster`. Bad.  
-Debian has some wrapper commands for better work with database clusters.
-My instance_name will be `dev_01`.
-
-```bash
-pg_createcluster 15 dev_01 
-# created the folder /var/lib/postgresql/15/dev_01 on port 5433
-pg_ctlcluster 15 dev_01 start 
-# list the database clusters that were created with pg_createcluster
-pg_lsclusters 
-#Ver Cluster Port Status Owner    Data directory                Log file
-#15  dev_01  5433 online postgres /var/lib/postgresql/15/dev_01 /var/log/postgresql/postgresql-15-dev_01.log
-#15  dev_02  5434 online postgres /var/lib/postgresql/15/dev_02 /var/log/postgresql/postgresql-15-dev_02.log
-```
-
-Every cluster gets its own port, so we can connect to them separately.
-The local user `postgres` can connect over local Unix domain socket connections.
-Create a password for user `postgres` in psql:
-
-```bash
-# change interactive user to superuser `postgres`
-su postgres
-psql -U postgres -p 5433
-#psql (15.10 (Debian 15.10-1.pgdg120+1))
-\password postgres
-#Enter new password for user "postgres":
-#Enter it again:
-\q
-```
-
-### bdb_Point_In_Time_Recovery
+### bdb_Point_In_Time_Recovery PITR
 
 <https://pgdash.io/blog/postgres-incremental-backup-recovery.html>  
+<https://www.scalingpostgres.com/tutorials/postgresql-backup-point-in-time-recovery/>  
+
+The ability to use PITR "point in time recovery" is not enabled by default.
+
+```bash
+# open the bash inside the postgres container as root
+podman exec -it crustde_postgres_cnt /bin/bash
+```
+
+```bash
+# make folder as postgres@crustde_pod:/$
+su postgres
+mkdir -p /var/lib/postgresql/15_archive_wal/dev_01
+nano /etc/postgresql/15/dev_01/postgresql.conf
+```
+
+Find and modify these 3 lines:
+
+```plaintext
+  wal_level = replica
+  archive_mode = on # (change requires restart)
+  archive_command = 'test ! -f /var/lib/postgresql/15_archive_wal/dev_01/%f && cp %p /var/lib/postgresql/15_archive_wal/dev_01/%f'
+```
+
+```bash
+exit
+# return to root@crustde_pod:/#
+pg_ctlcluster 15 dev_01 start 
+```
+
 
 1. Close the WAL of the database cluster
 

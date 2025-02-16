@@ -19,6 +19,7 @@
     "rust-analyzer.showUnlinkedFileNotification": false,
     "cSpell.words": [
         "Alla",
+        "basebackup",
         "bestia",
         "bestiadev",
         "bypassrls",
@@ -38,6 +39,8 @@
         "Nazdravlje",
         "nextval",
         "PATHCONV",
+        "pgdg",
+        "PITR",
         "pkey",
         "plpgsql",
         "proname",
