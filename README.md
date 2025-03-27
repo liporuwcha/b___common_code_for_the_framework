@@ -1,6 +1,6 @@
 # b___common_code_for_the_framework
 
-***liporuwcha namespace "b___ common code for the framework"***
+***liporuwcha namespace b___ common code for the framework***
 
  ![work-in-progress](https://img.shields.io/badge/work_in_progress-yellow)
  ![rustlang](https://img.shields.io/badge/rustlang-orange)
