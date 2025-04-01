@@ -8,6 +8,9 @@
  ![License](https://img.shields.io/badge/license-MIT-blue.svg)
  ![b_common_code_for_the_framework](https://bestia.dev/webpage_hit_counter/get_svg_image/238074482.svg)
 
+ ![logo](https://github.com/liporuwcha/liporuwcha/blob/main/images/logo/logo_liporuwcha.png)  
+ liporuwcha is a "GitHub organization" that groups [multiple repositories](https://github.com/orgs/liporuwcha/repositories?q=sort%3Aname-asc) together
+
 ## Framework project
 
 Sometimes I will abbreviate the project name `liporuwcha` to just `lip` for sake of brevity.  
